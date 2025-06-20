@@ -1,0 +1,5 @@
+config.json
+node_modules
+debug_bot.js
+verification_bot_logs.txt
+package-lock.json
