@@ -1,5 +1,24 @@
 {
   "dependencies": {
     "discord.js": "^14.20.0"
-  }
+  },
+  "name": "discord-verification-bot",
+  "version": "1.0.0",
+  "description": "A self-hosted Discord bot for verifying users via screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities.",
+  "main": "deploy-commands.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zachdidit/discord-verification-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Zachdidit/discord-verification-bot/issues"
+  },
+  "homepage": "https://github.com/Zachdidit/discord-verification-bot#readme"
 }
