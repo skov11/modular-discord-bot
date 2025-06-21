@@ -24,10 +24,15 @@ const {
   verifyChannelId,
   verifyCommandChannelId,
   logChannelId,
+  howToVerifyID, // Using your config variable name
 } = config;
 
 // Debug flag - set to false for production
 const DEBUG_MODE = config.debugMode || false;
+
+// Rate limiting for auto-responses
+const userResponseTracker = new Map();
+const RESPONSE_COOLDOWN = 60000; // 1 minute in milliseconds
 
 const logToFile = (message) => {
   const timestamp = new Date().toISOString();
@@ -76,6 +81,129 @@ client.once("ready", async () => {
       logToFile(`❌ Failed to fetch roles: ${err.message}`);
     }
   }
+});
+
+// NEW: Auto-response for messages in verify-here channel
+client.on("messageCreate", async (message) => {
+  // Ignore messages from bots
+  if (message.author.bot) return;
+
+  // Only respond to messages in the verify command channel
+  if (message.channelId !== verifyCommandChannelId) return;
+
+  debugLog("🔍 ======== MESSAGE IN VERIFY CHANNEL ========");
+  debugLog(`🔍 Message from: ${message.author.tag} (${message.author.id})`);
+  debugLog(`🔍 Message content: "${message.content}"`);
+  debugLog(`🔍 Channel: ${message.channel.name} (${message.channelId})`);
+
+  try {
+    // Check if the message is a slash command (these start with /)
+    // Slash commands don't actually appear as regular messages, but just in case
+    if (message.content.startsWith("/")) {
+      debugLog("🔍 Message appears to be a command, ignoring");
+      return;
+    }
+
+    // Rate limiting check
+    const userId = message.author.id;
+    const now = Date.now();
+    const lastResponse = userResponseTracker.get(userId);
+
+    if (lastResponse && now - lastResponse < RESPONSE_COOLDOWN) {
+      debugLog(
+        `🔍 Rate limit active for user ${message.author.tag}, skipping response`
+      );
+      return;
+    }
+
+    // Update rate limiting tracker
+    userResponseTracker.set(userId, now);
+
+    // Clean up old entries from rate limiting tracker (older than cooldown period)
+    for (const [id, timestamp] of userResponseTracker.entries()) {
+      if (now - timestamp > RESPONSE_COOLDOWN) {
+        userResponseTracker.delete(id);
+      }
+    }
+
+    debugLog("🔍 Sending auto-response to guide user to /verify command");
+
+    // Create the guidance message with your specific format
+    const howToVerifyMention = howToVerifyID
+      ? ` Check out the instructions in <#${howToVerifyID}>.`
+      : "";
+    const responseMessage = `Please use the /verify command to begin the verification process.${howToVerifyMention}`;
+
+    // Try to send private DM first, fallback to public reply if DMs are disabled
+    try {
+      await message.author.send(responseMessage);
+      debugLog("✅ Auto-response DM sent successfully");
+
+      // Log the auto-response event to Discord log channel
+      const logMessage = `🤖 Auto-response DM sent to <@${message.author.id}> in <#${message.channelId}> - guided to use /verify command`;
+      logToFile(logMessage);
+      logToDiscord(client, logMessage);
+    } catch (dmError) {
+      debugLog(
+        `⚠️ Failed to send DM to ${message.author.tag}: ${dmError.message}`
+      );
+      debugLog("🔄 Falling back to public reply in channel");
+
+      try {
+        // Fallback: Send public reply if DM fails
+        await message.reply({
+          content: responseMessage,
+          allowedMentions: { repliedUser: false },
+        });
+
+        debugLog(
+          "✅ Auto-response public reply sent successfully (DM fallback)"
+        );
+
+        // Log the fallback event
+        const fallbackLogMessage = `🤖 Auto-response public reply sent to <@${message.author.id}> in <#${message.channelId}> - DM failed, used public fallback`;
+        logToFile(fallbackLogMessage);
+        logToDiscord(client, fallbackLogMessage);
+      } catch (replyError) {
+        debugLog(
+          `❌ Both DM and reply failed for ${message.author.tag}: ${replyError.message}`
+        );
+
+        // Log the complete failure
+        const failureLogMessage = `❌ Failed to send auto-response to <@${message.author.id}> in <#${message.channelId}> - both DM and public reply failed`;
+        logToFile(failureLogMessage);
+        logToDiscord(client, failureLogMessage);
+      }
+    }
+
+    // Auto-delete the user's message after sending response
+    try {
+      debugLog("🗑️ Attempting to delete user's message to keep channel clean");
+      await message.delete();
+      debugLog("✅ User's message deleted successfully");
+
+      // Log message deletion
+      const deleteLogMessage = `🗑️ Auto-deleted message from <@${message.author.id}> in <#${message.channelId}> - keeping verification channel clean`;
+      logToFile(deleteLogMessage);
+      logToDiscord(client, deleteLogMessage);
+    } catch (deleteError) {
+      debugLog(
+        `❌ Failed to delete message from ${message.author.tag}: ${deleteError.message}`
+      );
+
+      // Log deletion failure
+      const deleteFailLogMessage = `❌ Failed to auto-delete message from <@${message.author.id}> in <#${message.channelId}> - insufficient permissions`;
+      logToFile(deleteFailLogMessage);
+      logToDiscord(client, deleteFailLogMessage);
+    }
+  } catch (error) {
+    debugLog("🔍 ======== ERROR IN AUTO-RESPONSE ========");
+    logToFile(`❌ Error sending auto-response: ${error.message}`);
+    debugLog(`❌ Error stack: ${error.stack}`);
+    debugLog("🔍 ======== AUTO-RESPONSE ERROR END ========");
+  }
+
+  debugLog("🔍 ======== MESSAGE PROCESSING END ========");
 });
 
 client.on("interactionCreate", async (interaction) => {
