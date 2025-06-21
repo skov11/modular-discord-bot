@@ -158,19 +158,17 @@ client.on("messageCreate", async (message) => {
       await message.delete();
       debugLog("✅ User's message deleted successfully");
 
-      // Log message deletion
-      const deleteLogMessage = `🗑️ Auto-deleted message from <@${message.author.id}> in <#${message.channelId}> - keeping verification channel clean`;
+      // Log message deletion to file only (not Discord)
+      const deleteLogMessage = `🗑️ Auto-deleted message from ${message.author.tag} (${message.author.id}) in ${message.channel.name} - keeping verification channel clean`;
       logToFile(deleteLogMessage);
-      logToDiscord(client, deleteLogMessage);
     } catch (deleteError) {
       debugLog(
         `❌ Failed to delete message from ${message.author.tag}: ${deleteError.message}`
       );
 
-      // Log deletion failure
-      const deleteFailLogMessage = `❌ Failed to auto-delete message from <@${message.author.id}> in <#${message.channelId}> - insufficient permissions`;
+      // Log deletion failure to file only (not Discord)
+      const deleteFailLogMessage = `❌ Failed to auto-delete message from ${message.author.tag} (${message.author.id}) in ${message.channel.name} - insufficient permissions`;
       logToFile(deleteFailLogMessage);
-      logToDiscord(client, deleteFailLogMessage);
     }
   } catch (error) {
     debugLog("🔍 ======== ERROR IN AUTO-RESPONSE ========");
