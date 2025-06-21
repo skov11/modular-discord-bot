@@ -527,6 +527,48 @@ client.on("interactionCreate", async (interaction) => {
       await member.roles.add(atreidesRoleId);
       debugLog("✅ Role added successfully");
 
+      // Extract character name from the embed for nickname update
+      let characterName = null;
+      try {
+        const embed = interaction.message.embeds[0];
+        const characterField = embed.fields.find(
+          (field) => field.name === "Character Name"
+        );
+        characterName = characterField ? characterField.value : null;
+        debugLog(`🔍 Extracted character name from embed: ${characterName}`);
+      } catch (embedError) {
+        debugLog(
+          `❌ Failed to extract character name from embed: ${embedError.message}`
+        );
+      }
+
+      // Update nickname to character name
+      if (characterName) {
+        try {
+          debugLog(`🔍 Attempting to change nickname to: ${characterName}`);
+          await member.setNickname(characterName);
+          debugLog("✅ Nickname updated successfully");
+
+          // Log nickname update to file only (not Discord)
+          logToFile(
+            `📝 Updated nickname for ${member.user.tag} to "${characterName}"`
+          );
+        } catch (nicknameError) {
+          debugLog(`❌ Failed to update nickname: ${nicknameError.message}`);
+
+          // Log nickname failure to file only (not Discord)
+          logToFile(
+            `❌ Failed to update nickname for ${member.user.tag} to "${characterName}": ${nicknameError.message}`
+          );
+        }
+      } else {
+        debugLog("⚠️ No character name found, skipping nickname update");
+        // Log missing character name to file only (not Discord)
+        logToFile(
+          `⚠️ Could not extract character name for ${member.user.tag} - nickname not updated`
+        );
+      }
+
       // Update interaction
       debugLog("🔍 Updating interaction message...");
       await interaction.update({
