@@ -11,5 +11,7 @@
   "howToVerifyID": "<CHANNEL_ID>,
   "logChannelId": "<CHANNEL_ID>",
   "clientId": "<DISCORD_APP_ID>",
+  "approvalMessage": "✅ Thank you for verifying! You have been approved.",
+  "denialMessagePrefix": "❌ Your verification has been denied.",
   "debugMode": false
 }
