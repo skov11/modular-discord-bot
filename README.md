@@ -5,8 +5,9 @@ A self-hosted Discord bot for verifying users via screenshot submission and admi
 ## ✨ Features
 
 - **Slash Command Interface**: `/verify` command with screenshot, character name, and guild name parameters
-- **Automatic Nickname Updates**: Sets Discord nickname to in-game character name upon verification
-- **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" buttons
+- **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" and "Deny Verification" buttons
+- **Verification Denial System**: Moderators can deny verification requests with mandatory reason documentation
+- **Resubmission Control**: Denied users must resubmit verification before being eligible for approval
 - **Role-Based Permissions**: Only users with specified roles can approve verifications
 - **Duplicate Prevention**: Prevents users from submitting multiple verification requests
 - **Auto-Response System**: Automatically guides users who send non-command messages to use `/verify`
@@ -154,9 +155,12 @@ pm2 startup
 ### For Admins
 
 1. Monitor verification requests in the designated channel
-2. Click "Approve Verification" button to approve users
-3. Check logs in the log channel or `verification_bot_logs.txt` file
-4. Monitor auto-moderation events in the log channel
+2. Click "Approve Verification" button to approve users or "Deny Verification" to deny with reason
+3. When denying, provide a mandatory reason in the popup modal
+4. Check logs in the log channel or `verification_bot_logs.txt` file
+5. Monitor auto-moderation events in the log channel
+
+**Note**: Denied users must resubmit their verification before they can be approved.
 
 ## 🤖 Auto-Moderation Features
 
@@ -167,7 +171,16 @@ pm2 startup
 - **Fallback**: If DM fails (user has DMs disabled), sends a public reply
 - **Auto-Delete**: Original message is automatically deleted to keep channel clean
 
-### Example User Experience
+### Auto-Moderation Features
+
+#### Message Guidance System
+
+- **Trigger**: When users send any message that isn't `/verify` in the verification channel
+- **Response**: Bot sends a private DM with guidance to use `/verify` command
+- **Fallback**: If DM fails (user has DMs disabled), sends a public reply
+- **Auto-Delete**: Original message is automatically deleted to keep channel clean
+
+#### Example Auto-Moderation Flow
 
 1. User types: "How do I get verified?"
 2. Bot sends private DM: "Please use the /verify command to begin the verification process. Check out the instructions in #how-to-verify."
@@ -193,11 +206,12 @@ pm2 startup
    - Upload a valid screenshot
    - Provide character and guild information
 
-2. **Test Admin Approval**
+2. **Test Admin Actions**
 
    - Ensure admin has the required role
-   - Click "Approve Verification" button
-   - Verify user receives the designated role
+   - Click "Approve Verification" button and verify user receives the designated role
+   - Click "Deny Verification" button, provide a reason, and verify the denial is processed
+   - Test that denied users cannot be approved until they resubmit
 
 3. **Test Auto-Moderation**
 
@@ -216,6 +230,7 @@ pm2 startup
 The bot logs the following events to both file and Discord:
 
 - ✅ Successful verification approvals
+- ❌ Verification denials with reasons
 - 📝 Nickname updates to character names
 - 🤖 Auto-response DMs sent to users
 - ❌ Failed DM attempts with public fallbacks
@@ -224,14 +239,15 @@ The bot logs the following events to both file and Discord:
 
 ## 🔮 Future Enhancements
 
-- [ ] **Rejection System**: Add "Reject Verification" button with reason field
+- [ ] **User Notification System**: Automated DMs to users when verification is approved/denied
 - [ ] **Request Expiration**: Auto-expire verification requests after set time
-- [ ] **DM Notifications**: Send direct messages to users upon verification status changes
 - [ ] **Audit Trail**: Enhanced logging with user IDs and timestamps
 - [ ] **Multi-Server Support**: Support for multiple Discord servers
 - [ ] **Web Dashboard**: Browser-based admin interface for managing verifications
 - [ ] **Custom Auto-Response Messages**: Configurable response templates
 - [ ] **Whitelist System**: Allow certain users to bypass auto-moderation
+- [ ] **Bulk Verification**: Process multiple verifications at once
+- [ ] **Appeal System**: Allow users to appeal denied verifications
 
 ## 🐛 Troubleshooting
 
@@ -248,6 +264,13 @@ The bot logs the following events to both file and Discord:
 - Confirm admin roles are correctly configured
 - Verify bot has "Manage Roles" permission
 - Check console logs for error messages
+
+**Verification denials not working**
+
+- Verify the denial reason modal appears when clicking "Deny Verification"
+- Check that denied users cannot be approved until resubmission
+- Ensure denial reasons are being logged properly
+- Monitor logs for modal submission errors
 
 **Nickname updates not working**
 
