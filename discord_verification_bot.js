@@ -527,6 +527,53 @@ client.on("interactionCreate", async (interaction) => {
       await member.roles.add(atreidesRoleId);
       debugLog("✅ Role added successfully");
 
+      // Extract character name from the embed for nickname update
+      let characterName = null;
+      try {
+        const embed = interaction.message.embeds[0];
+        const characterField = embed.fields.find(
+          (field) => field.name === "Character Name"
+        );
+        characterName = characterField ? characterField.value : null;
+        debugLog(`🔍 Extracted character name from embed: ${characterName}`);
+      } catch (embedError) {
+        debugLog(
+          `❌ Failed to extract character name from embed: ${embedError.message}`
+        );
+      }
+
+      // Update nickname to character name
+      if (characterName) {
+        try {
+          debugLog(`🔍 Attempting to change nickname to: ${characterName}`);
+          await member.setNickname(characterName);
+          debugLog("✅ Nickname updated successfully");
+
+          // Log nickname update to Discord
+          const nicknameLogMessage = `📝 Updated nickname for <@${memberId}> to "${characterName}"`;
+          logToFile(
+            `📝 Updated nickname for ${member.user.tag} to "${characterName}"`
+          );
+          logToDiscord(client, nicknameLogMessage);
+        } catch (nicknameError) {
+          debugLog(`❌ Failed to update nickname: ${nicknameError.message}`);
+
+          // Log nickname failure to Discord
+          const nicknameFailMessage = `❌ Failed to update nickname for <@${memberId}> to "${characterName}" - insufficient permissions or hierarchy issue`;
+          logToFile(
+            `❌ Failed to update nickname for ${member.user.tag} to "${characterName}": ${nicknameError.message}`
+          );
+          logToDiscord(client, nicknameFailMessage);
+        }
+      } else {
+        debugLog("⚠️ No character name found, skipping nickname update");
+        const noCharacterMessage = `⚠️ Could not extract character name for <@${memberId}> - nickname not updated`;
+        logToFile(
+          `⚠️ Could not extract character name for ${member.user.tag} - nickname not updated`
+        );
+        logToDiscord(client, noCharacterMessage);
+      }
+
       // Update interaction
       debugLog("🔍 Updating interaction message...");
       await interaction.update({

@@ -5,6 +5,7 @@ A self-hosted Discord bot for verifying users via screenshot submission and admi
 ## ✨ Features
 
 - **Slash Command Interface**: `/verify` command with screenshot, character name, and guild name parameters
+- **Automatic Nickname Updates**: Sets Discord nickname to in-game character name upon verification
 - **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" buttons
 - **Role-Based Permissions**: Only users with specified roles can approve verifications
 - **Duplicate Prevention**: Prevents users from submitting multiple verification requests
@@ -67,6 +68,7 @@ nvm alias default 18
      - Send Messages
      - Embed Links
      - Manage Roles
+     - **Manage Nicknames** (for automatic nickname updates)
      - **Manage Messages** (for auto-deletion)
      - Read Message History
      - Use Application Commands
@@ -214,9 +216,10 @@ pm2 startup
 The bot logs the following events to both file and Discord:
 
 - ✅ Successful verification approvals
+- 📝 Nickname updates to character names
 - 🤖 Auto-response DMs sent to users
-- 🗑️ Message deletions for channel cleanup
 - ❌ Failed DM attempts with public fallbacks
+- ❌ Nickname update failures due to permissions
 - 🔍 Debug information (when debug mode enabled)
 
 ## 🔮 Future Enhancements
@@ -245,6 +248,13 @@ The bot logs the following events to both file and Discord:
 - Confirm admin roles are correctly configured
 - Verify bot has "Manage Roles" permission
 - Check console logs for error messages
+
+**Nickname updates not working**
+
+- Ensure bot has "Manage Nicknames" permission
+- Verify bot's role is higher than the user's highest role in the server hierarchy
+- Check if the user is the server owner (nicknames cannot be changed for server owners)
+- Monitor logs for specific permission errors
 
 **Auto-moderation not working**
 
