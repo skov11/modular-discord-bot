@@ -549,29 +549,24 @@ client.on("interactionCreate", async (interaction) => {
           await member.setNickname(characterName);
           debugLog("✅ Nickname updated successfully");
 
-          // Log nickname update to Discord
-          const nicknameLogMessage = `📝 Updated nickname for <@${memberId}> to "${characterName}"`;
+          // Log nickname update to file only (not Discord)
           logToFile(
             `📝 Updated nickname for ${member.user.tag} to "${characterName}"`
           );
-          logToDiscord(client, nicknameLogMessage);
         } catch (nicknameError) {
           debugLog(`❌ Failed to update nickname: ${nicknameError.message}`);
 
-          // Log nickname failure to Discord
-          const nicknameFailMessage = `❌ Failed to update nickname for <@${memberId}> to "${characterName}" - insufficient permissions or hierarchy issue`;
+          // Log nickname failure to file only (not Discord)
           logToFile(
             `❌ Failed to update nickname for ${member.user.tag} to "${characterName}": ${nicknameError.message}`
           );
-          logToDiscord(client, nicknameFailMessage);
         }
       } else {
         debugLog("⚠️ No character name found, skipping nickname update");
-        const noCharacterMessage = `⚠️ Could not extract character name for <@${memberId}> - nickname not updated`;
+        // Log missing character name to file only (not Discord)
         logToFile(
           `⚠️ Could not extract character name for ${member.user.tag} - nickname not updated`
         );
-        logToDiscord(client, noCharacterMessage);
       }
 
       // Update interaction
