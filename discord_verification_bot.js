@@ -30,9 +30,7 @@ const {
 // Debug flag - set to false for production
 const DEBUG_MODE = config.debugMode || false;
 
-// Rate limiting for auto-responses
-const userResponseTracker = new Map();
-const RESPONSE_COOLDOWN = 60000; // 1 minute in milliseconds
+// Auto-response functionality - no rate limiting
 
 const logToFile = (message) => {
   const timestamp = new Date().toISOString();
@@ -102,28 +100,6 @@ client.on("messageCreate", async (message) => {
     if (message.content.startsWith("/")) {
       debugLog("🔍 Message appears to be a command, ignoring");
       return;
-    }
-
-    // Rate limiting check
-    const userId = message.author.id;
-    const now = Date.now();
-    const lastResponse = userResponseTracker.get(userId);
-
-    if (lastResponse && now - lastResponse < RESPONSE_COOLDOWN) {
-      debugLog(
-        `🔍 Rate limit active for user ${message.author.tag}, skipping response`
-      );
-      return;
-    }
-
-    // Update rate limiting tracker
-    userResponseTracker.set(userId, now);
-
-    // Clean up old entries from rate limiting tracker (older than cooldown period)
-    for (const [id, timestamp] of userResponseTracker.entries()) {
-      if (now - timestamp > RESPONSE_COOLDOWN) {
-        userResponseTracker.delete(id);
-      }
     }
 
     debugLog("🔍 Sending auto-response to guide user to /verify command");
