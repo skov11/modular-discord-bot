@@ -1,6 +1,6 @@
 # Discord Verification Bot
 
-A self-hosted Discord bot for verifying users via screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities.
+A self-hosted Discord bot for verifying users via screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities and automatic channel moderation.
 
 ## ✨ Features
 
@@ -8,6 +8,9 @@ A self-hosted Discord bot for verifying users via screenshot submission and admi
 - **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" buttons
 - **Role-Based Permissions**: Only users with specified roles can approve verifications
 - **Duplicate Prevention**: Prevents users from submitting multiple verification requests
+- **Auto-Response System**: Automatically guides users who send non-command messages to use `/verify`
+- **Channel Auto-Moderation**: Automatically deletes non-command messages to keep verification channels clean
+- **Smart DM Fallback**: Sends private DMs to users with public reply fallback if DMs are disabled
 - **Comprehensive Logging**: Records verification events to both file system and Discord channels
 - **Process Management**: PM2 integration for reliable bot hosting
 
@@ -64,6 +67,7 @@ nvm alias default 18
      - Send Messages
      - Embed Links
      - Manage Roles
+     - **Manage Messages** (for auto-deletion)
      - Read Message History
      - Use Application Commands
 
@@ -86,16 +90,21 @@ npm install discord.js
 
 ### Step 4: Configuration
 
-Create a `.env` file in your project root with the following variables:
+Create a `config.json` file in your project root with the following structure:
 
-```env
-DISCORD_TOKEN=your_bot_token_here
-CLIENT_ID=your_application_id_here
-GUILD_ID=your_server_id_here
-VERIFICATION_CHANNEL_ID=channel_for_verification_requests
-LOG_CHANNEL_ID=channel_for_logs
-VERIFIED_ROLE_ID=role_to_assign_verified_users
-ADMIN_ROLE_IDS=comma,separated,admin,role,ids
+```json
+{
+  "token": "your_bot_token_here",
+  "clientId": "your_application_id_here",
+  "guildId": "your_server_id_here",
+  "verifyChannelId": "channel_for_verification_requests",
+  "verifyCommandChannelId": "channel_where_users_use_verify_command",
+  "logChannelId": "channel_for_logs",
+  "howToVerifyID": "channel_with_verification_instructions",
+  "atreidesRoleId": "role_to_assign_verified_users",
+  "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"],
+  "debugMode": true
+}
 ```
 
 ### Step 5: Deploy Commands
@@ -138,12 +147,30 @@ pm2 startup
 2. Upload a screenshot as proof
 3. Provide your character name and guild name
 4. Wait for admin approval
+5. **Note**: Any non-command messages in the verification channel will be automatically deleted and you'll receive a private DM with guidance
 
 ### For Admins
 
 1. Monitor verification requests in the designated channel
 2. Click "Approve Verification" button to approve users
 3. Check logs in the log channel or `verification_bot_logs.txt` file
+4. Monitor auto-moderation events in the log channel
+
+## 🤖 Auto-Moderation Features
+
+### Message Guidance System
+
+- **Trigger**: When users send any message that isn't `/verify` in the verification channel
+- **Response**: Bot sends a private DM with guidance to use `/verify` command
+- **Fallback**: If DM fails (user has DMs disabled), sends a public reply
+- **Auto-Delete**: Original message is automatically deleted to keep channel clean
+
+### Example User Experience
+
+1. User types: "How do I get verified?"
+2. Bot sends private DM: "Please use the /verify command to begin the verification process. Check out the instructions in #how-to-verify."
+3. Bot deletes the original message
+4. Channel stays clean and organized
 
 ## 🔧 PM2 Management Commands
 
@@ -170,9 +197,27 @@ pm2 startup
    - Click "Approve Verification" button
    - Verify user receives the designated role
 
-3. **Check Logging**
+3. **Test Auto-Moderation**
+
+   - Send a regular message in the verification channel
+   - Verify you receive a private DM with guidance
+   - Confirm the original message is deleted
+   - Test with DMs disabled to verify public fallback
+
+4. **Check Logging**
    - Confirm logs appear in `verification_bot_logs.txt`
    - Verify log messages in the Discord log channel
+   - Monitor auto-moderation events
+
+## 📊 Logging Events
+
+The bot logs the following events to both file and Discord:
+
+- ✅ Successful verification approvals
+- 🤖 Auto-response DMs sent to users
+- 🗑️ Message deletions for channel cleanup
+- ❌ Failed DM attempts with public fallbacks
+- 🔍 Debug information (when debug mode enabled)
 
 ## 🔮 Future Enhancements
 
@@ -182,6 +227,8 @@ pm2 startup
 - [ ] **Audit Trail**: Enhanced logging with user IDs and timestamps
 - [ ] **Multi-Server Support**: Support for multiple Discord servers
 - [ ] **Web Dashboard**: Browser-based admin interface for managing verifications
+- [ ] **Custom Auto-Response Messages**: Configurable response templates
+- [ ] **Whitelist System**: Allow certain users to bypass auto-moderation
 
 ## 🐛 Troubleshooting
 
@@ -199,11 +246,24 @@ pm2 startup
 - Verify bot has "Manage Roles" permission
 - Check console logs for error messages
 
+**Auto-moderation not working**
+
+- Ensure bot has "Manage Messages" permission in verification channel
+- Verify `verifyCommandChannelId` is correctly set in config
+- Check if bot can send DMs to users
+- Monitor logs for permission errors
+
 **Logging not working**
 
 - Ensure log channel ID is correct in configuration
 - Verify bot has "Send Messages" permission in log channel
 - Check file system permissions for log file creation
+
+**DMs not being sent**
+
+- Verify users have DMs enabled from server members
+- Check if public reply fallback is working
+- Monitor logs for DM failure events
 
 ## 📄 License
 
