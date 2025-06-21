@@ -28,6 +28,8 @@ const {
   verifyCommandChannelId,
   logChannelId,
   howToVerifyID, // Using your config variable name
+  approvalMessage, // Configurable approval DM message
+  denialMessagePrefix, // Configurable denial DM message prefix
 } = config;
 
 // Debug flag - set to false for production
@@ -604,6 +606,27 @@ client.on("interactionCreate", async (interaction) => {
         });
         debugLog("✅ Interaction updated successfully");
 
+        // Send approval DM to user
+        try {
+          const approvalDM =
+            approvalMessage ||
+            "✅ Thank you for verifying! You have been approved.";
+          await member.user.send(approvalDM);
+          debugLog("✅ Approval DM sent to user");
+          logToFile(`✅ Approval DM sent to ${member.user.tag}`);
+        } catch (dmError) {
+          debugLog(
+            `⚠️ Failed to send approval DM to ${member.user.tag}: ${dmError.message}`
+          );
+
+          // Log DM failure to Discord for moderator awareness
+          const dmFailMessage = `⚠️ Failed to send approval DM to <@${memberId}> - user may have DMs disabled`;
+          logToFile(
+            `⚠️ Failed to send approval DM to ${member.user.tag}: ${dmError.message}`
+          );
+          logToDiscord(client, dmFailMessage);
+        }
+
         const logMessage = `✅ ${verifier.user.tag} verified ${
           member.user.tag
         } at ${new Date().toLocaleString()}`;
@@ -724,6 +747,29 @@ client.on("interactionCreate", async (interaction) => {
           components: [],
           embeds: interaction.message.embeds,
         });
+
+        // Send denial DM to user
+        try {
+          const denialPrefix =
+            denialMessagePrefix || "❌ Your verification has been denied.";
+          const denialDM = `${denialPrefix}\nReason: ${reason}`;
+          await member.user.send(denialDM);
+          debugLog("✅ Denial DM sent to user");
+          logToFile(
+            `✅ Denial DM sent to ${member.user.tag} with reason: ${reason}`
+          );
+        } catch (dmError) {
+          debugLog(
+            `⚠️ Failed to send denial DM to ${member.user.tag}: ${dmError.message}`
+          );
+
+          // Log DM failure to Discord for moderator awareness
+          const dmFailMessage = `⚠️ Failed to send denial DM to <@${memberId}> - user may have DMs disabled. Reason was: ${reason}`;
+          logToFile(
+            `⚠️ Failed to send denial DM to ${member.user.tag}: ${dmError.message}`
+          );
+          logToDiscord(client, dmFailMessage);
+        }
 
         // Log denial to Discord and file
         const denialLogMessage = `❌ <@${verifier.id}> denied verification for <@${memberId}>. Reason: ${reason}`;
