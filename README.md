@@ -106,6 +106,8 @@ Create a `config.json` file in your project root with the following structure:
   "howToVerifyID": "channel_with_verification_instructions",
   "atreidesRoleId": "role_to_assign_verified_users",
   "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"],
+  "approvalMessage": "✅ Thank you for verifying! You have been approved.",
+  "denialMessagePrefix": "❌ Your verification has been denied.",
   "debugMode": true
 }
 ```
@@ -213,14 +215,20 @@ pm2 startup
    - Click "Deny Verification" button, provide a reason, and verify the denial is processed
    - Test that denied users cannot be approved until they resubmit
 
-3. **Test Auto-Moderation**
+3. **Test User Notifications**
+
+   - Approve a verification and confirm the user receives an approval DM
+   - Deny a verification with a reason and confirm the user receives a denial DM with the reason
+   - Test with a user who has DMs disabled to verify warning logs appear
+
+4. **Test Auto-Moderation**
 
    - Send a regular message in the verification channel
    - Verify you receive a private DM with guidance
    - Confirm the original message is deleted
    - Test with DMs disabled to verify public fallback
 
-4. **Check Logging**
+5. **Check Logging**
    - Confirm logs appear in `verification_bot_logs.txt`
    - Verify log messages in the Discord log channel
    - Monitor auto-moderation events
@@ -231,15 +239,13 @@ The bot logs the following events to both file and Discord:
 
 - ✅ Successful verification approvals
 - ❌ Verification denials with reasons
-- 📝 Nickname updates to character names
+- ⚠️ Failed DM deliveries (when users have DMs disabled)
 - 🤖 Auto-response DMs sent to users
 - ❌ Failed DM attempts with public fallbacks
-- ❌ Nickname update failures due to permissions
 - 🔍 Debug information (when debug mode enabled)
 
 ## 🔮 Future Enhancements
 
-- [ ] **User Notification System**: Automated DMs to users when verification is approved/denied
 - [ ] **Request Expiration**: Auto-expire verification requests after set time
 - [ ] **Audit Trail**: Enhanced logging with user IDs and timestamps
 - [ ] **Multi-Server Support**: Support for multiple Discord servers
@@ -264,6 +270,13 @@ The bot logs the following events to both file and Discord:
 - Confirm admin roles are correctly configured
 - Verify bot has "Manage Roles" permission
 - Check console logs for error messages
+
+**User notifications not working**
+
+- Verify users have DMs enabled from server members
+- Check the Discord log channel for DM failure warnings
+- Ensure `approvalMessage` and `denialMessagePrefix` are properly set in config.json
+- Monitor file logs for DM delivery confirmations
 
 **Verification denials not working**
 
