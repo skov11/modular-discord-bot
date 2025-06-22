@@ -21,8 +21,16 @@ const commands = [
     )
     .addAttachmentOption((option) =>
       option
-        .setName("screenshot")
-        .setDescription("Upload a screenshot showing your character and guild")
+        .setName("screenshot1")
+        .setDescription(
+          "Upload first screenshot showing your character and guild"
+        )
+        .setRequired(true)
+    )
+    .addAttachmentOption((option) =>
+      option
+        .setName("screenshot2")
+        .setDescription("Upload second screenshot for additional verification")
         .setRequired(true)
     ),
 ].map((command) => command.toJSON());
