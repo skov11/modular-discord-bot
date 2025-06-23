@@ -212,12 +212,13 @@ client.on("interactionCreate", async (interaction) => {
 
     try {
       // Step 1: Collect command options (wrapped in try/catch)
-      let characterName, guildName, screenshot;
+      let characterName, guildName, screenshot1, screenshot2;
       try {
         debugLog("🔍 Step 1: Attempting to collect command options...");
         characterName = interaction.options.getString("character");
         guildName = interaction.options.getString("guild");
-        screenshot = interaction.options.getAttachment("screenshot");
+        screenshot1 = interaction.options.getAttachment("screenshot1");
+        screenshot2 = interaction.options.getAttachment("screenshot2");
         debugLog("✅ Step 1: Options collected successfully");
       } catch (optionsError) {
         logToFile(
@@ -227,14 +228,39 @@ client.on("interactionCreate", async (interaction) => {
       }
 
       debugLog(
-        `🔍 Received options - Character: ${characterName}, Guild: ${guildName}, Screenshot: ${
-          screenshot ? "Yes" : "No"
+        `🔍 Received options - Character: ${characterName}, Guild: ${guildName}, Screenshots: ${
+          screenshot1 && screenshot2 ? "2 provided" : "Missing screenshots"
         }`
       );
-      if (screenshot && DEBUG_MODE) {
-        debugLog(`🔍 Screenshot URL: ${screenshot.url}`);
-        debugLog(`🔍 Screenshot size: ${screenshot.size} bytes`);
-        debugLog(`🔍 Screenshot content type: ${screenshot.contentType}`);
+      if (screenshot1 && DEBUG_MODE) {
+        debugLog(`🔍 Screenshot 1 URL: ${screenshot1.url}`);
+        debugLog(`🔍 Screenshot 1 size: ${screenshot1.size} bytes`);
+        debugLog(`🔍 Screenshot 1 content type: ${screenshot1.contentType}`);
+      }
+      if (screenshot2 && DEBUG_MODE) {
+        debugLog(`🔍 Screenshot 2 URL: ${screenshot2.url}`);
+        debugLog(`🔍 Screenshot 2 size: ${screenshot2.size} bytes`);
+        debugLog(`🔍 Screenshot 2 content type: ${screenshot2.contentType}`);
+      }
+
+      // Validate that both screenshots are actually images
+      const validImageTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (
+        !validImageTypes.includes(screenshot1.contentType) ||
+        !validImageTypes.includes(screenshot2.contentType)
+      ) {
+        debugLog("❌ Invalid file type provided - not an image");
+        return interaction.reply({
+          content:
+            "❌ Both screenshots must be valid image files (PNG, JPG, GIF, or WebP).",
+          ephemeral: true,
+        });
       }
 
       // Step 2: Check if user already has the role (wrapped in try/catch)
@@ -333,18 +359,24 @@ client.on("interactionCreate", async (interaction) => {
         throw permissionError;
       }
 
-      // Step 5: Create embed (wrapped in try/catch)
+      // Step 5: Create embed with both screenshots (wrapped in try/catch)
       let embed;
       try {
-        debugLog("🔍 Step 5: Creating verification embed...");
+        debugLog(
+          "🔍 Step 5: Creating verification embed with both screenshots..."
+        );
         embed = new EmbedBuilder()
           .setTitle("🛡️ Verification Request")
           .addFields(
             { name: "Character Name", value: characterName },
             { name: "Guild Name", value: guildName },
-            { name: "Discord User", value: `<@${interaction.user.id}>` }
+            { name: "Discord User", value: `<@${interaction.user.id}>` },
+            {
+              name: "Screenshots",
+              value: "📸 Screenshot 1 (above) | 📸 Screenshot 2 (below)",
+            }
           )
-          .setImage(screenshot.url)
+          .setImage(screenshot1.url) // Primary image
           .setTimestamp()
           .setFooter({ text: `User ID: ${interaction.user.id}` });
         debugLog("✅ Step 5: Embed created successfully");
@@ -378,18 +410,25 @@ client.on("interactionCreate", async (interaction) => {
         throw buttonError;
       }
 
-      // Step 7: Send to verification channel (wrapped in try/catch)
+      // Step 7: Send to verification channel with both screenshots (wrapped in try/catch)
       let verificationMessage;
       try {
         debugLog(
-          "🔍 Step 7: Attempting to send message to verification channel..."
+          "🔍 Step 7: Attempting to send message to verification channel with both screenshots..."
         );
+
+        // Create a second embed for the second screenshot
+        const secondEmbed = new EmbedBuilder()
+          .setTitle("📸 Screenshot 2")
+          .setImage(screenshot2.url)
+          .setColor(0x2f3136); // Dark gray color to distinguish it
+
         verificationMessage = await verifyChannel.send({
-          embeds: [embed],
+          embeds: [embed, secondEmbed],
           components: [row],
         });
         debugLog(
-          `✅ Step 7: Message sent successfully. Message ID: ${verificationMessage.id}`
+          `✅ Step 7: Message sent successfully with both screenshots. Message ID: ${verificationMessage.id}`
         );
       } catch (sendError) {
         logToFile(
@@ -408,7 +447,8 @@ client.on("interactionCreate", async (interaction) => {
       try {
         debugLog("🔍 Step 8: Attempting to reply to user...");
         await interaction.reply({
-          content: "✅ Your verification request has been submitted.",
+          content:
+            "✅ Your verification request has been submitted with both screenshots.",
           ephemeral: true,
         });
         debugLog("✅ Step 8: Successfully replied to user");
@@ -420,7 +460,7 @@ client.on("interactionCreate", async (interaction) => {
         throw replyError;
       }
 
-      debugLog("✅ /verify command completed successfully");
+      debugLog("✅ /verify command completed successfully with 2 screenshots");
       debugLog("🔍 ======== /VERIFY COMMAND EXECUTION END ========");
     } catch (err) {
       // Enhanced error logging

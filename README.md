@@ -1,10 +1,12 @@
 # Discord Verification Bot
 
-A self-hosted Discord bot for verifying users via screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities and automatic channel moderation.
+A self-hosted Discord bot for verifying users via dual screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities and automatic channel moderation.
 
 ## ✨ Features
 
-- **Slash Command Interface**: `/verify` command with screenshot, character name, and guild name parameters
+- **Dual Screenshot Verification**: `/verify` command requires 2 screenshots with character name and guild name parameters
+- **Image Validation**: Automatic validation to ensure both uploads are valid image files (PNG, JPG, GIF, WebP)
+- **Enhanced Display System**: Dual-embed display showing both screenshots clearly in verification channels
 - **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" and "Deny Verification" buttons
 - **Verification Denial System**: Moderators can deny verification requests with mandatory reason documentation
 - **Resubmission Control**: Denied users must resubmit verification before being eligible for approval
@@ -149,18 +151,30 @@ pm2 startup
 ### For Users
 
 1. Use `/verify` command in the designated verification channel
-2. Upload a screenshot as proof
+2. **Upload 2 screenshots** as proof of verification (both required)
+   - **Screenshot 1**: Primary verification image showing character and guild
+   - **Screenshot 2**: Additional verification image for enhanced security
 3. Provide your character name and guild name
 4. Wait for admin approval
 5. **Note**: Any non-command messages in the verification channel will be automatically deleted and you'll receive a private DM with guidance
 
+#### Supported Image Formats
+
+- PNG (.png)
+- JPEG/JPG (.jpg, .jpeg)
+- GIF (.gif)
+- WebP (.webp)
+
 ### For Admins
 
 1. Monitor verification requests in the designated channel
-2. Click "Approve Verification" button to approve users or "Deny Verification" to deny with reason
-3. When denying, provide a mandatory reason in the popup modal
-4. Check logs in the log channel or `verification_bot_logs.txt` file
-5. Monitor auto-moderation events in the log channel
+2. **Review both screenshots** displayed in the verification embed:
+   - Primary screenshot appears in the main embed
+   - Secondary screenshot appears in a second embed below
+3. Click "Approve Verification" button to approve users or "Deny Verification" to deny with reason
+4. When denying, provide a mandatory reason in the popup modal
+5. Check logs in the log channel or `verification_bot_logs.txt` file
+6. Monitor auto-moderation events in the log channel
 
 **Note**: Denied users must resubmit their verification before they can be approved.
 
@@ -173,14 +187,12 @@ pm2 startup
 - **Fallback**: If DM fails (user has DMs disabled), sends a public reply
 - **Auto-Delete**: Original message is automatically deleted to keep channel clean
 
-### Auto-Moderation Features
+### Dual Screenshot Validation
 
-#### Message Guidance System
-
-- **Trigger**: When users send any message that isn't `/verify` in the verification channel
-- **Response**: Bot sends a private DM with guidance to use `/verify` command
-- **Fallback**: If DM fails (user has DMs disabled), sends a public reply
-- **Auto-Delete**: Original message is automatically deleted to keep channel clean
+- **File Type Checking**: Automatically validates that both uploads are valid image files
+- **Supported Formats**: PNG, JPG/JPEG, GIF, WebP
+- **Error Handling**: Clear error messages for invalid file types
+- **Enhanced Display**: Two embeds showing both screenshots with clear labeling
 
 #### Example Auto-Moderation Flow
 
@@ -188,6 +200,13 @@ pm2 startup
 2. Bot sends private DM: "Please use the /verify command to begin the verification process. Check out the instructions in #how-to-verify."
 3. Bot deletes the original message
 4. Channel stays clean and organized
+
+#### Example Verification Flow
+
+1. User runs: `/verify character:PlayerName guild:GuildName screenshot1:[image1] screenshot2:[image2]`
+2. Bot validates both images are valid formats
+3. Bot creates dual-embed display showing both screenshots
+4. Admins can review both images before making approval decision
 
 ## 🔧 PM2 Management Commands
 
@@ -202,47 +221,69 @@ pm2 startup
 
 ## 🧪 Testing
 
-1. **Test Verification Flow**
+1. **Test Dual Screenshot Verification Flow**
 
    - Use `/verify` command in the correct channel
-   - Upload a valid screenshot
+   - Upload 2 valid screenshots (different formats to test validation)
    - Provide character and guild information
+   - Verify both screenshots display correctly in the verification channel
 
-2. **Test Admin Actions**
+2. **Test Image Validation**
+
+   - Try uploading non-image files (should be rejected)
+   - Test different valid image formats (PNG, JPG, GIF, WebP)
+   - Verify error messages for invalid file types
+
+3. **Test Admin Actions**
 
    - Ensure admin has the required role
+   - Review both screenshots in the dual-embed display
    - Click "Approve Verification" button and verify user receives the designated role
    - Click "Deny Verification" button, provide a reason, and verify the denial is processed
    - Test that denied users cannot be approved until they resubmit
 
-3. **Test User Notifications**
+4. **Test User Notifications**
 
    - Approve a verification and confirm the user receives an approval DM
    - Deny a verification with a reason and confirm the user receives a denial DM with the reason
    - Test with a user who has DMs disabled to verify warning logs appear
 
-4. **Test Auto-Moderation**
+5. **Test Auto-Moderation**
 
    - Send a regular message in the verification channel
    - Verify you receive a private DM with guidance
    - Confirm the original message is deleted
    - Test with DMs disabled to verify public fallback
 
-5. **Check Logging**
-   - Confirm logs appear in `verification_bot_logs.txt`
+6. **Check Enhanced Logging**
+   - Confirm logs show details about both uploaded screenshots
    - Verify log messages in the Discord log channel
    - Monitor auto-moderation events
+   - Check file validation logging
 
 ## 📊 Logging Events
 
 The bot logs the following events to both file and Discord:
 
-- ✅ Successful verification approvals
+- ✅ Successful verification approvals with dual screenshot confirmation
 - ❌ Verification denials with reasons
+- 🖼️ Screenshot validation results (file types, sizes, etc.)
 - ⚠️ Failed DM deliveries (when users have DMs disabled)
 - 🤖 Auto-response DMs sent to users
 - ❌ Failed DM attempts with public fallbacks
-- 🔍 Debug information (when debug mode enabled)
+- 🔍 Debug information including both screenshot details (when debug mode enabled)
+- 📁 File type validation failures and successes
+
+## 🆕 Recent Updates
+
+### Version 2.0 - Dual Screenshot System
+
+- **Enhanced Security**: Now requires 2 screenshots for verification
+- **Image Validation**: Automatic file type checking for uploaded images
+- **Improved Display**: Dual-embed system showing both screenshots clearly
+- **Better Error Handling**: Clear messages for invalid file uploads
+- **Enhanced Logging**: Detailed logging of both screenshot uploads
+- **Maintained Compatibility**: All existing features work with new dual screenshot system
 
 ## 🔮 Future Enhancements
 
@@ -254,6 +295,9 @@ The bot logs the following events to both file and Discord:
 - [ ] **Whitelist System**: Allow certain users to bypass auto-moderation
 - [ ] **Bulk Verification**: Process multiple verifications at once
 - [ ] **Appeal System**: Allow users to appeal denied verifications
+- [ ] **Screenshot Comparison**: AI-powered detection of duplicate or suspicious images
+- [ ] **Custom Image Requirements**: Configurable image size and quality requirements
+- [ ] **Watermark Detection**: Optional watermark validation for enhanced security
 
 ## 🐛 Troubleshooting
 
@@ -262,7 +306,7 @@ The bot logs the following events to both file and Discord:
 **Bot not responding to commands**
 
 - Verify bot has necessary permissions in the channel
-- Check that slash commands are properly deployed
+- Check that slash commands are properly deployed with updated dual screenshot parameters
 - Ensure bot is online and PM2 process is running
 
 **Approval buttons not working**
@@ -270,6 +314,20 @@ The bot logs the following events to both file and Discord:
 - Confirm admin roles are correctly configured
 - Verify bot has "Manage Roles" permission
 - Check console logs for error messages
+
+**Screenshot validation failing**
+
+- Verify uploaded files are valid image formats (PNG, JPG, GIF, WebP)
+- Check file sizes aren't exceeding Discord's limits
+- Monitor logs for specific validation errors
+- Ensure both screenshots are provided (both required)
+
+**Dual screenshot display issues**
+
+- Verify bot has "Embed Links" permission
+- Check that both screenshots are valid URLs
+- Monitor logs for embed creation errors
+- Ensure verification channel allows embeds
 
 **User notifications not working**
 
@@ -299,6 +357,13 @@ The bot logs the following events to both file and Discord:
 - Check if bot can send DMs to users
 - Monitor logs for permission errors
 
+**Image upload errors**
+
+- Check Discord file size limits (8MB for non-Nitro users, 50MB for Nitro)
+- Verify supported image formats are being used
+- Monitor logs for specific upload validation errors
+- Test with different image formats and sizes
+
 **Logging not working**
 
 - Ensure log channel ID is correct in configuration
@@ -310,6 +375,20 @@ The bot logs the following events to both file and Discord:
 - Verify users have DMs enabled from server members
 - Check if public reply fallback is working
 - Monitor logs for DM failure events
+
+### New Troubleshooting for Dual Screenshots
+
+**Only one screenshot showing**
+
+- Verify both screenshot parameters are provided in the command
+- Check embed permissions in the verification channel
+- Monitor logs for second embed creation issues
+
+**File validation errors**
+
+- Ensure uploaded files are actually images, not renamed text files
+- Check that file extensions match actual file content
+- Verify files aren't corrupted during upload
 
 ## 📄 License
 
