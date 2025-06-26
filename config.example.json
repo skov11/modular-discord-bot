@@ -1,0 +1,19 @@
+{
+  "token": "YOUR_BOT_TOKEN",
+  "clientId": "YOUR_CLIENT_ID",
+  "guildId": "YOUR_GUILD_ID",
+  "plugins": {
+    "verification": {
+      "enabled": true,
+      "verifyChannelId": "ADMIN_VERIFICATION_CHANNEL_ID",
+      "verifyCommandChannelId": "USER_COMMAND_CHANNEL_ID",
+      "logChannelId": "LOG_CHANNEL_ID",
+      "howToVerifyID": "INSTRUCTIONS_CHANNEL_ID",
+      "atreidesRoleId": "VERIFIED_ROLE_ID",
+      "verifierRoleIds": ["ADMIN_ROLE_ID_1", "ADMIN_ROLE_ID_2"],
+      "approvalMessage": "Congratulations! Your verification has been approved. Welcome to the server!",
+      "denialMessagePrefix": "Your verification request has been denied.",
+      "debugMode": false
+    }
+  }
+}

@@ -1,8 +1,17 @@
 # Discord Verification Bot
 
-A self-hosted Discord bot for verifying users via dual screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities and automatic channel moderation.
+A modular, plugin-based Discord bot built with Discord.js v14+. Originally designed for user verification via dual screenshot submission and admin approval, now extended with a flexible plugin system that allows easy addition of new features and commands.
 
 ## ✨ Features
+
+### Core Features
+
+- **Plugin System**: Modular architecture allowing easy addition and removal of features
+- **Dynamic Command Loading**: Commands are loaded from plugins at runtime
+- **Plugin Configuration**: Each plugin can have its own configuration settings
+- **Hot-reload Support**: Plugins can be reloaded without restarting the bot
+
+### Verification Plugin Features
 
 - **Dual Screenshot Verification**: `/verify` command requires 2 screenshots with character name and guild name parameters
 - **Image Validation**: Automatic validation to ensure both uploads are valid image files (PNG, JPG, GIF, WebP)
@@ -82,52 +91,64 @@ nvm alias default 18
 ### Step 3: Project Setup
 
 ```bash
-# Create project directory
-mkdir discord-verification-bot
+# Clone the repository (or create project directory)
+git clone <your-repo-url> discord-verification-bot
 cd discord-verification-bot
 
-# Initialize npm project
-npm init -y
-
 # Install dependencies
-npm install discord.js
+npm install
 ```
 
 ### Step 4: Configuration
 
-Create a `config.json` file in your project root with the following structure:
+The bot now uses a plugin-based configuration system. Create a `config.json` file based on `config.example.json`:
+
+```bash
+cp config.example.json config.json
+```
+
+Edit the configuration with your values:
 
 ```json
 {
   "token": "your_bot_token_here",
   "clientId": "your_application_id_here",
   "guildId": "your_server_id_here",
-  "verifyChannelId": "channel_for_verification_requests",
-  "verifyCommandChannelId": "channel_where_users_use_verify_command",
-  "logChannelId": "channel_for_logs",
-  "howToVerifyID": "channel_with_verification_instructions",
-  "atreidesRoleId": "role_to_assign_verified_users",
-  "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"],
-  "approvalMessage": "✅ Thank you for verifying! You have been approved.",
-  "denialMessagePrefix": "❌ Your verification has been denied.",
-  "debugMode": true
+  "plugins": {
+    "verification": {
+      "enabled": true,
+      "verifyChannelId": "channel_for_verification_requests",
+      "verifyCommandChannelId": "channel_where_users_use_verify_command",
+      "logChannelId": "channel_for_logs",
+      "howToVerifyID": "channel_with_verification_instructions",
+      "atreidesRoleId": "role_to_assign_verified_users",
+      "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"],
+      "approvalMessage": "✅ Thank you for verifying! You have been approved.",
+      "denialMessagePrefix": "❌ Your verification has been denied.",
+      "debugMode": true
+    }
+  }
 }
 ```
 
-### Step 5: Deploy Commands
+#### Migrating from Old Configuration
 
-Register the slash commands with Discord:
+If you're upgrading from the single-file version, use the migration script:
 
 ```bash
-node deploy-commands.js
+node migrate-config.js
+# Review config.new.json and rename it to config.json
+mv config.new.json config.json
 ```
 
-### Step 6: Start the Bot
+### Step 5: Start the Bot
+
+The bot now automatically deploys commands when it starts:
 
 #### Development Mode
 
 ```bash
-node discord_verification_bot.js
+node index.js
 ```
 
 #### Production Mode (with PM2)
@@ -137,7 +158,7 @@ node discord_verification_bot.js
 sudo npm install -g pm2
 
 # Start the bot
-pm2 start discord_verification_bot.js --name verification-bot
+pm2 start index.js --name verification-bot
 
 # Save PM2 configuration
 pm2 save
@@ -276,6 +297,15 @@ The bot logs the following events to both file and Discord:
 
 ## 🆕 Recent Updates
 
+### Version 3.0 - Plugin System Architecture
+
+- **Plugin System**: Complete rewrite with modular plugin architecture
+- **Easy Extensibility**: Add new features by creating plugins
+- **Plugin Configuration**: Each plugin has its own configuration section
+- **Backward Compatible**: Verification plugin maintains all v2.0 features
+- **Example Plugin**: Includes template for creating new plugins
+- **Better Organization**: Separated core bot logic from feature implementations
+
 ### Version 2.0 - Dual Screenshot System
 
 - **Enhanced Security**: Now requires 2 screenshots for verification
@@ -285,12 +315,51 @@ The bot logs the following events to both file and Discord:
 - **Enhanced Logging**: Detailed logging of both screenshot uploads
 - **Maintained Compatibility**: All existing features work with new dual screenshot system
 
+## 🔌 Plugin Development
+
+The bot now supports a plugin system. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for detailed documentation on creating custom plugins.
+
+### Quick Plugin Example
+
+```javascript
+const Plugin = require("../../core/Plugin");
+const { SlashCommandBuilder } = require("discord.js");
+
+class MyPlugin extends Plugin {
+  async load() {
+    const myCommand = {
+      data: new SlashCommandBuilder()
+        .setName("mycommand")
+        .setDescription("My custom command"),
+      execute: async (interaction) => {
+        await interaction.reply("Hello from my plugin!");
+      },
+    };
+    this.registerCommand(myCommand);
+  }
+
+  async unload() {
+    this.log("Plugin unloaded");
+  }
+}
+
+module.exports = MyPlugin;
+```
+
 ## 🔮 Future Enhancements
+
+### Core System
+
+- [ ] **Plugin Hot Reload**: Reload plugins without restarting bot
+- [ ] **Plugin Dependencies**: Allow plugins to depend on other plugins
+- [ ] **Plugin Marketplace**: Central repository for community plugins
+- [ ] **Web Configuration**: Browser-based plugin management
+
+### Verification Plugin
 
 - [ ] **Request Expiration**: Auto-expire verification requests after set time
 - [ ] **Audit Trail**: Enhanced logging with user IDs and timestamps
 - [ ] **Multi-Server Support**: Support for multiple Discord servers
-- [ ] **Web Dashboard**: Browser-based admin interface for managing verifications
 - [ ] **Custom Auto-Response Messages**: Configurable response templates
 - [ ] **Whitelist System**: Allow certain users to bypass auto-moderation
 - [ ] **Bulk Verification**: Process multiple verifications at once
