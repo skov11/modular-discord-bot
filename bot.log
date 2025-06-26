@@ -1,0 +1,85 @@
+[2025-06-26T23:02:05.007Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:02:05.047Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:02:05.209Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:03:05.407Z] [BOT] [ERROR] Discord client error: member is not defined
+[2025-06-26T23:05:33.127Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:05:33.129Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:06:00.646Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:06:00.685Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:06:00.783Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:06:49.893Z] [BOT] [ERROR] Discord client error: member is not defined
+[2025-06-26T23:07:48.816Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:07:48.818Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:08:16.212Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:08:16.252Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:08:16.355Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:16:38.568Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:16:38.570Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:17:06.272Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:17:06.313Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:17:06.404Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:17:26.138Z] [BOT] [ERROR] Discord client error: member is not defined
+[2025-06-26T23:21:10.865Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:21:10.870Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:21:36.491Z] [BOT] [INFO] [VERIFICATION] Verification plugin loaded
+[2025-06-26T23:21:36.493Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:21:36.533Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:21:36.583Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:21:58.789Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test, Guild: test
+[2025-06-26T23:22:06.587Z] [BOT] [ERROR] [VERIFICATION] Error in approval: TypeError: this.logToFile is not a function
+[2025-06-26T23:23:20.909Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:23:20.910Z] [BOT] [INFO] [VERIFICATION] Verification plugin unloaded
+[2025-06-26T23:23:20.912Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:23:48.324Z] [BOT] [INFO] [VERIFICATION] Verification plugin loaded
+[2025-06-26T23:23:48.326Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:23:48.366Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:23:48.467Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:24:34.071Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test, Guild: test
+[2025-06-26T23:24:41.795Z] [BOT] [INFO] [VERIFICATION] 📝 Updated nickname for skovtester to "test"
+[2025-06-26T23:24:42.384Z] [BOT] [INFO] [VERIFICATION] ✅ Approval DM sent to skovtester
+[2025-06-26T23:24:42.548Z] [BOT] [INFO] [VERIFICATION] ✅ skov11 verified skovtester at 6/26/2025, 7:24:42 PM
+[2025-06-26T23:25:22.742Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test123, Guild: test
+[2025-06-26T23:25:27.837Z] [BOT] [INFO] [VERIFICATION] ✅ Denial DM sent to skovtester with reason: testererwerw
+[2025-06-26T23:25:27.988Z] [BOT] [ERROR] Discord client error: member is not defined
+[2025-06-26T23:26:31.141Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test213, Guild: test213
+[2025-06-26T23:26:55.129Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:26:55.131Z] [BOT] [INFO] [VERIFICATION] Verification plugin unloaded
+[2025-06-26T23:26:55.133Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:27:22.567Z] [BOT] [INFO] [VERIFICATION] Verification plugin loaded
+[2025-06-26T23:27:22.569Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:27:22.608Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:27:22.687Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:27:38.248Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test321, Guild: test
+[2025-06-26T23:27:44.319Z] [BOT] [INFO] [VERIFICATION] ✅ Denial DM sent to skovtester with reason: testestssa
+[2025-06-26T23:27:44.486Z] [BOT] [INFO] [VERIFICATION] ❌ skov11 denied verification for skovtester. Reason: testestssa
+[2025-06-26T23:28:23.330Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test2, Guild: test
+[2025-06-26T23:30:55.941Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:30:55.943Z] [BOT] [INFO] [VERIFICATION] Verification plugin unloaded
+[2025-06-26T23:30:55.945Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:31:23.351Z] [BOT] [INFO] [VERIFICATION] Verification plugin loaded
+[2025-06-26T23:31:23.353Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:31:23.392Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:31:23.460Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:32:27.843Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test, Guild: test
+[2025-06-26T23:32:38.309Z] [BOT] [INFO] [VERIFICATION] ✅ Denial DM sent to skovtester with reason: ASDFASWDasdf
+[2025-06-26T23:32:38.459Z] [BOT] [INFO] [VERIFICATION] ❌ skov11 denied verification for skovtester. Reason: ASDFASWDasdf
+[2025-06-26T23:32:58.571Z] [BOT] [DEBUG] [VERIFICATION] Removed skovtester from denied users list - allowing resubmission
+[2025-06-26T23:32:59.170Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: TEST, Guild: TEST
+[2025-06-26T23:33:04.491Z] [BOT] [INFO] [VERIFICATION] 📝 Updated nickname for skovtester to "TEST"
+[2025-06-26T23:33:05.109Z] [BOT] [INFO] [VERIFICATION] ✅ Approval DM sent to skovtester
+[2025-06-26T23:33:05.338Z] [BOT] [INFO] [VERIFICATION] ✅ skov11 verified skovtester at 6/26/2025, 7:33:05 PM
+[2025-06-26T23:46:25.201Z] [BOT] [INFO] Shutting down bot...
+[2025-06-26T23:46:25.203Z] [BOT] [INFO] [VERIFICATION] Verification plugin unloaded
+[2025-06-26T23:46:25.204Z] [BOT] [INFO] Bot shutdown complete
+[2025-06-26T23:46:52.569Z] [BOT] [INFO] [VERIFICATION] Verification plugin loaded
+[2025-06-26T23:46:52.571Z] [BOT] [INFO] Started refreshing 1 application (/) commands.
+[2025-06-26T23:46:52.611Z] [BOT] [INFO] Bot is ready! Logged in as Piter#6989
+[2025-06-26T23:46:52.763Z] [BOT] [INFO] Successfully reloaded 1 application (/) commands.
+[2025-06-26T23:47:29.471Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test, Guild: test
+[2025-06-26T23:47:56.872Z] [BOT] [INFO] [VERIFICATION] ✅ Denial DM sent to skovtester with reason: testsedtssd
+[2025-06-26T23:47:57.079Z] [BOT] [INFO] [VERIFICATION] ❌ skov11 denied verification for skovtester. Reason: testsedtssd
+[2025-06-26T23:48:31.224Z] [BOT] [DEBUG] [VERIFICATION] Removed skovtester from denied users list - allowing resubmission
+[2025-06-26T23:48:31.664Z] [BOT] [DEBUG] [VERIFICATION] Verification request submitted by skovtester (1384268889147572254) - Character: test, Guild: test
+[2025-06-26T23:48:41.538Z] [BOT] [INFO] [VERIFICATION] 📝 Updated nickname for skovtester to "test"
+[2025-06-26T23:48:42.319Z] [BOT] [INFO] [VERIFICATION] ✅ Approval DM sent to skovtester
+[2025-06-26T23:48:42.580Z] [BOT] [INFO] [VERIFICATION] ✅ skov11 verified skovtester at 6/26/2025, 7:48:42 PM

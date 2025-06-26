@@ -6,6 +6,7 @@ const path = require('path');
 class DiscordBot {
     constructor(configPath) {
         this.config = this.loadConfig(configPath);
+        this.logFile = path.join(path.dirname(configPath), 'bot.log');
         this.client = new Client({
             intents: [
                 GatewayIntentBits.Guilds,
@@ -28,6 +29,18 @@ class DiscordBot {
         }
     }
 
+    log(message, type = 'info') {
+        const timestamp = new Date().toISOString();
+        const logMessage = `[${timestamp}] [BOT] [${type.toUpperCase()}] ${message}`;
+        console.log(logMessage);
+        
+        try {
+            fs.appendFileSync(this.logFile, `${logMessage}\n`);
+        } catch (error) {
+            console.error('Failed to write to bot log file:', error);
+        }
+    }
+
     async start() {
         await this.setupEventHandlers();
         await this.login();
@@ -37,7 +50,7 @@ class DiscordBot {
 
     async setupEventHandlers() {
         this.client.once('ready', () => {
-            console.log(`Bot is ready! Logged in as ${this.client.user.tag}`);
+            this.log(`Bot is ready! Logged in as ${this.client.user.tag}`);
         });
 
         this.client.on('interactionCreate', async (interaction) => {
@@ -49,27 +62,27 @@ class DiscordBot {
             try {
                 await command.execute(interaction);
             } catch (error) {
-                console.error(`Error executing command ${interaction.commandName}:`, error);
+                this.log(`Error executing command ${interaction.commandName}: ${error.message}`, 'error');
                 
                 const errorMessage = 'There was an error while executing this command!';
                 if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({ content: errorMessage, ephemeral: true });
+                    await interaction.followUp({ content: errorMessage, flags: 64 });
                 } else {
-                    await interaction.reply({ content: errorMessage, ephemeral: true });
+                    await interaction.reply({ content: errorMessage, flags: 64 });
                 }
             }
         });
 
         this.client.on('error', (error) => {
-            console.error('Discord client error:', error);
+            this.log(`Discord client error: ${error.message}`, 'error');
         });
     }
 
     async login() {
         try {
-            await this.client.login(this.config.token);
+            await this.client.login(this.config.bot.token);
         } catch (error) {
-            console.error('Failed to login:', error);
+            this.log(`Failed to login: ${error.message}`, 'error');
             process.exit(1);
         }
     }
@@ -83,9 +96,9 @@ class DiscordBot {
                     const pluginPath = path.join(pluginsDir, pluginName, 'index.js');
                     if (fs.existsSync(pluginPath)) {
                         try {
-                            await this.pluginManager.loadPlugin(pluginPath, pluginConfig);
+                            await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this));
                         } catch (error) {
-                            console.error(`Failed to load plugin ${pluginName}:`, error);
+                            this.log(`Failed to load plugin ${pluginName}: ${error.message}`, 'error');
                         }
                     }
                 }
@@ -102,34 +115,35 @@ class DiscordBot {
         });
 
         if (commands.length === 0) {
-            console.log('No commands to deploy');
+            this.log('No commands to deploy');
             return;
         }
 
-        const rest = new REST({ version: '10' }).setToken(this.config.token);
+        const rest = new REST({ version: '10' }).setToken(this.config.bot.token);
 
         try {
-            console.log(`Started refreshing ${commands.length} application (/) commands.`);
+            this.log(`Started refreshing ${commands.length} application (/) commands.`);
 
             const data = await rest.put(
-                Routes.applicationGuildCommands(this.config.clientId, this.config.guildId),
+                Routes.applicationGuildCommands(this.config.bot.clientId, this.config.bot.guildId),
                 { body: commands },
             );
 
-            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+            this.log(`Successfully reloaded ${data.length} application (/) commands.`);
         } catch (error) {
-            console.error('Error deploying commands:', error);
+            this.log(`Error deploying commands: ${error.message}`, 'error');
         }
     }
 
     async stop() {
-        console.log('Shutting down bot...');
+        this.log('Shutting down bot...');
         
         for (const plugin of this.pluginManager.getAllPlugins()) {
             await this.pluginManager.unloadPlugin(plugin.name);
         }
         
         this.client.destroy();
+        this.log('Bot shutdown complete');
     }
 }
 

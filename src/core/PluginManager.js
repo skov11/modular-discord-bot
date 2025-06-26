@@ -9,10 +9,15 @@ class PluginManager {
         this.commands = new Collection();
     }
 
-    async loadPlugin(pluginPath, config = {}) {
+    async loadPlugin(pluginPath, config = {}, botLogMethod = null) {
         try {
             const PluginClass = require(pluginPath);
             const plugin = new PluginClass(this.client, config);
+            
+            // Pass bot's log method to plugin if available
+            if (botLogMethod) {
+                plugin.botLog = botLogMethod;
+            }
             
             await plugin.load();
             this.plugins.set(plugin.name, plugin);

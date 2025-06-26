@@ -7,13 +7,59 @@ class VerificationPlugin extends Plugin {
     constructor(client, config) {
         super(client, config);
         this.deniedUsers = new Set();
-        this.logFile = path.join(__dirname, 'verification_logs.txt');
+        this.flatConfig = this.flattenConfig(config);
+    }
+
+    flattenConfig(config) {
+        // Flatten nested config structure for easier access
+        const flat = { ...config };
+        
+        if (config.channels) {
+            Object.assign(flat, config.channels);
+        }
+        if (config.roles) {
+            Object.assign(flat, config.roles);
+        }
+        if (config.messages) {
+            Object.assign(flat, config.messages);
+        }
+        if (config.settings) {
+            Object.assign(flat, config.settings);
+        }
+        
+        return flat;
     }
 
     async load() {
+        this.validateConfig();
         this.registerVerifyCommand();
         this.setupEventHandlers();
         this.log('Verification plugin loaded');
+    }
+
+    validateConfig() {
+        const requiredFields = [
+            'verifyChannelId',
+            'verifyCommandChannelId',
+            'atreidesRoleId',
+            'verifierRoleIds'
+        ];
+
+        const missingFields = [];
+        for (const field of requiredFields) {
+            if (!this.flatConfig[field]) {
+                missingFields.push(field);
+            }
+        }
+
+        if (missingFields.length > 0) {
+            this.log(`WARNING: Missing required configuration fields: ${missingFields.join(', ')}`, 'warn');
+            this.log('The plugin will load but some features may not work properly.', 'warn');
+        }
+
+        if (this.flatConfig.verifierRoleIds && !Array.isArray(this.flatConfig.verifierRoleIds)) {
+            this.log('WARNING: verifierRoleIds should be an array', 'warn');
+        }
     }
 
     async unload() {
@@ -54,14 +100,25 @@ class VerificationPlugin extends Plugin {
 
     async handleVerifyCommand(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
-            const hasRole = interaction.member.roles.cache.has(this.config.atreidesRoleId);
+            if (!this.flatConfig.atreidesRoleId) {
+                return await interaction.editReply({
+                    content: 'Verification system is not properly configured. Please contact an administrator.'
+                });
+            }
+
+            const hasRole = interaction.member.roles.cache.has(this.flatConfig.atreidesRoleId);
             if (hasRole) {
                 return await interaction.editReply({
-                    content: 'You are already verified! No need to submit again.',
-                    ephemeral: true
+                    content: 'You are already verified! No need to submit again.'
                 });
+            }
+
+            // Remove user from denied list when they resubmit
+            if (this.deniedUsers.has(interaction.user.id)) {
+                this.deniedUsers.delete(interaction.user.id);
+                this.log(`Removed ${interaction.user.tag} from denied users list - allowing resubmission`, 'debug');
             }
 
             const characterName = interaction.options.getString('character');
@@ -77,12 +134,27 @@ class VerificationPlugin extends Plugin {
 
             if (!isValidFormat(screenshot1) || !isValidFormat(screenshot2)) {
                 return await interaction.editReply({
-                    content: 'Please upload valid image files (PNG, JPG, GIF, or WebP format).',
-                    ephemeral: true
+                    content: 'Please upload valid image files (PNG, JPG, GIF, or WebP format).'
                 });
             }
 
-            const verifyChannel = await this.client.channels.fetch(this.config.verifyChannelId);
+            if (!this.flatConfig.verifyChannelId) {
+                this.log('verifyChannelId is not configured', 'error');
+                return await interaction.editReply({
+                    content: 'Verification channel is not configured. Please contact an administrator.'
+                });
+            }
+
+            const verifyChannel = await this.client.channels.fetch(this.flatConfig.verifyChannelId).catch(error => {
+                this.log(`Failed to fetch verification channel ${this.flatConfig.verifyChannelId}: ${error.message}`, 'error');
+                return null;
+            });
+
+            if (!verifyChannel) {
+                return await interaction.editReply({
+                    content: 'Unable to access verification channel. Please contact an administrator.'
+                });
+            }
             
             const embed1 = new EmbedBuilder()
                 .setColor(0x0099FF)
@@ -113,35 +185,35 @@ class VerificationPlugin extends Plugin {
                 );
 
             await verifyChannel.send({
-                content: `<@&${this.config.verifierRoleIds.join('> <@&')}> New verification request:`,
                 embeds: [embed1, embed2],
                 components: [row]
             });
 
             await interaction.editReply({
-                content: 'Your verification request has been submitted! You will receive a DM when it has been reviewed.',
-                ephemeral: true
+                content: 'Your verification request has been submitted! You will receive a DM when it has been reviewed.'
             });
 
-            this.logToFile(`Verification request submitted by ${interaction.user.tag} (${interaction.user.id}) - Character: ${characterName}, Guild: ${guildName}`);
+            this.log(`Verification request submitted by ${interaction.user.tag} (${interaction.user.id}) - Character: ${characterName}, Guild: ${guildName}`, 'debug');
 
         } catch (error) {
             this.log(`Error in verify command: ${error}`, 'error');
             await interaction.editReply({
-                content: 'An error occurred while processing your verification request. Please try again later.',
-                ephemeral: true
+                content: 'An error occurred while processing your verification request. Please try again later.'
             });
         }
     }
 
     async handleMessageCreate(message) {
         if (message.author.bot) return;
-        if (message.channel.id !== this.config.verifyCommandChannelId) return;
+        if (!this.flatConfig.verifyCommandChannelId || message.channel.id !== this.flatConfig.verifyCommandChannelId) return;
 
         await message.delete().catch(() => {});
         
+        const verifyCommand = this.client.application?.commands.cache.find(cmd => cmd.name === 'verify');
+        const howToVerifyText = this.flatConfig.howToVerifyID ? ` Check <#${this.flatConfig.howToVerifyID}> for instructions.` : '';
+        
         const reply = await message.channel.send({
-            content: `${message.author}, please use the </verify:${this.client.application.commands.cache.find(cmd => cmd.name === 'verify')?.id || '1'}> command to submit your verification request. Check <#${this.config.howToVerifyID}> for instructions.`,
+            content: `${message.author}, please use the </verify:${verifyCommand?.id || '1'}> command to submit your verification request.${howToVerifyText}`,
             allowedMentions: { users: [message.author.id] }
         });
 
@@ -155,13 +227,13 @@ class VerificationPlugin extends Plugin {
         const [, action, userId] = interaction.customId.split('_');
         
         const isVerifier = interaction.member.roles.cache.some(role => 
-            this.config.verifierRoleIds.includes(role.id)
+            this.flatConfig.verifierRoleIds.includes(role.id)
         );
 
         if (!isVerifier) {
             return await interaction.reply({
                 content: 'You do not have permission to handle verification requests.',
-                ephemeral: true
+                flags: 64
             });
         }
 
@@ -177,19 +249,24 @@ class VerificationPlugin extends Plugin {
             if (this.deniedUsers.has(userId)) {
                 return await interaction.reply({
                     content: 'This user was previously denied and must resubmit their verification request before they can be approved.',
-                    ephemeral: true
+                    flags: 64
                 });
             }
 
             const member = await interaction.guild.members.fetch(userId);
             const characterName = interaction.message.embeds[0].fields.find(f => f.name === 'Character Name')?.value;
 
-            await member.roles.add(this.config.atreidesRoleId);
+            await member.roles.add(this.flatConfig.atreidesRoleId);
             
             if (characterName) {
-                await member.setNickname(characterName).catch(() => {
-                    this.log(`Could not change nickname for ${member.user.tag}`, 'warn');
-                });
+                try {
+                    await member.setNickname(characterName);
+                    this.log(`📝 Updated nickname for ${member.user.tag} to "${characterName}"`);
+                } catch (nicknameError) {
+                    this.log(`❌ Failed to update nickname for ${member.user.tag} to "${characterName}": ${nicknameError.message}`);
+                }
+            } else {
+                this.log(`⚠️ Could not extract character name for ${member.user.tag} - nickname not updated`);
             }
 
             const approvalEmbed = new EmbedBuilder()
@@ -204,8 +281,10 @@ class VerificationPlugin extends Plugin {
             });
 
             try {
-                await member.send(this.config.approvalMessage);
+                await member.send(this.flatConfig.approvalMessage);
+                this.log(`✅ Approval DM sent to ${member.user.tag}`);
             } catch (error) {
+                this.log(`⚠️ Failed to send approval DM to ${member.user.tag}: ${error.message}`);
                 await interaction.channel.send({
                     content: `Could not DM ${member}. They have been verified but should be notified manually.`,
                     allowedMentions: { users: [] }
@@ -214,16 +293,24 @@ class VerificationPlugin extends Plugin {
 
             await interaction.reply({
                 content: `Successfully verified ${member}!`,
-                ephemeral: true
+                flags: 64
             });
 
-            this.logToFile(`Verification approved for ${member.user.tag} (${userId}) by ${interaction.user.tag}`);
+            const logMessage = `✅ ${interaction.user.tag} verified ${member.user.tag} at ${new Date().toLocaleString()}`;
+            this.log(logMessage);
+            
+            // Send same message to Discord
+            if (this.flatConfig.logChannelId) {
+                this.client.channels.fetch(this.flatConfig.logChannelId)
+                    .then(channel => channel.send(logMessage))
+                    .catch(() => {});
+            }
 
         } catch (error) {
             this.log(`Error in approval: ${error}`, 'error');
             await interaction.reply({
                 content: 'An error occurred while approving the verification.',
-                ephemeral: true
+                flags: 64
             });
         }
     }
@@ -271,10 +358,22 @@ class VerificationPlugin extends Plugin {
             components: []
         });
 
+        let member;
         try {
-            const member = await interaction.guild.members.fetch(userId);
-            await member.send(`${this.config.denialMessagePrefix}\n\n**Reason:** ${reason}`);
+            member = await interaction.guild.members.fetch(userId);
+            const denialDM = `${this.flatConfig.denialMessagePrefix}\nReason: ${reason}`;
+            await member.user.send(denialDM);
+            this.log(`✅ Denial DM sent to ${member.user.tag} with reason: ${reason}`);
         } catch (error) {
+            this.log(`⚠️ Failed to send denial DM to ${member ? member.user.tag : userId}: ${error.message}`);
+            
+            // Send DM failure to Discord for moderator awareness
+            if (this.flatConfig.logChannelId) {
+                this.client.channels.fetch(this.flatConfig.logChannelId)
+                    .then(channel => channel.send(`⚠️ Failed to send denial DM to <@${userId}> - user may have DMs disabled. Reason was: ${reason}`))
+                    .catch(() => {});
+            }
+            
             await modalSubmit.channel.send({
                 content: `Could not DM <@${userId}>. They should be notified of the denial manually.`,
                 allowedMentions: { users: [] }
@@ -283,21 +382,31 @@ class VerificationPlugin extends Plugin {
 
         await modalSubmit.reply({
             content: 'Verification denied successfully.',
-            ephemeral: true
+            flags: 64
         });
 
-        this.logToFile(`Verification denied for user ${userId} by ${interaction.user.tag}. Reason: ${reason}`);
+        this.log(`❌ ${interaction.user.tag} denied verification for ${member ? member.user.tag : userId}. Reason: ${reason}`);
+        
+        // Send to Discord with mentions
+        if (this.flatConfig.logChannelId) {
+            this.client.channels.fetch(this.flatConfig.logChannelId)
+                .then(channel => channel.send(`❌ <@${interaction.user.id}> denied verification for <@${userId}>. Reason: ${reason}`))
+                .catch(() => {});
+        }
     }
 
-    logToFile(message) {
-        const timestamp = new Date().toISOString();
-        const logMessage = `[${timestamp}] ${message}\n`;
-        fs.appendFileSync(this.logFile, logMessage);
+    log(message, type = 'info') {
+        // Call parent log method for console output
+        super.log(message, type);
         
-        if (this.config.logChannelId) {
-            this.client.channels.fetch(this.config.logChannelId)
-                .then(channel => channel.send(`\`\`\`${message}\`\`\``))
-                .catch(() => {});
+        // Log to bot's main log file if available
+        if (this.botLog) {
+            // Always log to file, except for debug messages when debug mode is disabled
+            if (type === 'debug' && !this.flatConfig.debugMode) {
+                return; // Don't log debug messages to file when debug mode is off
+            }
+            
+            this.botLog(`[VERIFICATION] ${message}`, type);
         }
     }
 }

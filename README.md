@@ -111,35 +111,46 @@ Edit the configuration with your values:
 
 ```json
 {
-  "token": "your_bot_token_here",
-  "clientId": "your_application_id_here",
-  "guildId": "your_server_id_here",
+  "bot": {
+    "token": "your_bot_token_here",
+    "clientId": "your_application_id_here", 
+    "guildId": "your_server_id_here"
+  },
+
   "plugins": {
     "verification": {
       "enabled": true,
-      "verifyChannelId": "channel_for_verification_requests",
-      "verifyCommandChannelId": "channel_where_users_use_verify_command",
-      "logChannelId": "channel_for_logs",
-      "howToVerifyID": "channel_with_verification_instructions",
-      "atreidesRoleId": "role_to_assign_verified_users",
-      "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"],
-      "approvalMessage": "✅ Thank you for verifying! You have been approved.",
-      "denialMessagePrefix": "❌ Your verification has been denied.",
-      "debugMode": true
+      "channels": {
+        "verifyChannelId": "channel_for_verification_requests",
+        "verifyCommandChannelId": "channel_where_users_use_verify_command",
+        "logChannelId": "channel_for_logs",
+        "howToVerifyID": "channel_with_verification_instructions"
+      },
+      "roles": {
+        "atreidesRoleId": "role_to_assign_verified_users",
+        "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"]
+      },
+      "messages": {
+        "approvalMessage": "✅ Thank you for verifying! You have been approved.",
+        "denialMessagePrefix": "❌ Your verification has been denied."
+      },
+      "settings": {
+        "debugMode": true
+      }
     }
   }
 }
 ```
 
-#### Migrating from Old Configuration
+#### Validating Your Configuration
 
-If you're upgrading from the single-file version, use the migration script:
+Before starting the bot, you can check if your configuration is properly set up:
 
 ```bash
-node migrate-config.js
-# Review config.new.json and rename it to config.json
-mv config.new.json config.json
+node check-config.js
 ```
+
+This will validate all required settings and provide helpful feedback about any missing or incorrect values.
 
 ### Step 5: Start the Bot
 
@@ -284,16 +295,39 @@ pm2 startup
 
 ## 📊 Logging Events
 
-The bot logs the following events to both file and Discord:
+### File Logging (`bot.log`)
+The bot logs all events to `bot.log` in the root directory:
 
-- ✅ Successful verification approvals with dual screenshot confirmation
-- ❌ Verification denials with reasons
-- 🖼️ Screenshot validation results (file types, sizes, etc.)
-- ⚠️ Failed DM deliveries (when users have DMs disabled)
-- 🤖 Auto-response DMs sent to users
-- ❌ Failed DM attempts with public fallbacks
-- 🔍 Debug information including both screenshot details (when debug mode enabled)
-- 📁 File type validation failures and successes
+- **Bot startup/shutdown events**
+- **Plugin loading/unloading**
+- **Command deployment status**
+- **Verification events** (marked with `[VERIFICATION]`):
+  - ✅ Successful verification approvals
+  - ❌ Verification denials with reasons
+  - 📝 Nickname updates (success/failure)
+  - 💌 DM delivery status (success/failure)
+  - 🔍 Debug information (when debug mode enabled)
+  - ⚠️ Configuration warnings and errors
+
+### Discord Channel Logging
+Only specific events are sent to the Discord log channel:
+
+- ✅ **Verification approvals**: `AdminName verified UserName at [timestamp]`
+- ❌ **Verification denials**: `@Admin denied verification for @User. Reason: [reason]`
+- ⚠️ **DM delivery failures**: `Failed to send denial DM to @User - user may have DMs disabled`
+
+### Configuration Checking
+Use the configuration checker to validate your setup:
+
+```bash
+node check-config.js
+```
+
+This tool will:
+- Verify all required configuration values are set
+- Check for missing channel IDs or role IDs
+- Provide helpful tips for common configuration issues
+- Show which settings are optional vs required
 
 ## 🆕 Recent Updates
 
@@ -303,7 +337,8 @@ The bot logs the following events to both file and Discord:
 - **Easy Extensibility**: Add new features by creating plugins
 - **Plugin Configuration**: Each plugin has its own configuration section
 - **Backward Compatible**: Verification plugin maintains all v2.0 features
-- **Example Plugin**: Includes template for creating new plugins
+- **Unified Logging**: All logs now go to `bot.log` with clear event categorization
+- **Configuration Validation**: Added `check-config.js` tool for setup verification
 - **Better Organization**: Separated core bot logic from feature implementations
 
 ### Version 2.0 - Dual Screenshot System
@@ -375,8 +410,9 @@ module.exports = MyPlugin;
 **Bot not responding to commands**
 
 - Verify bot has necessary permissions in the channel
-- Check that slash commands are properly deployed with updated dual screenshot parameters
+- Check that slash commands are properly deployed (happens automatically on startup)
 - Ensure bot is online and PM2 process is running
+- Run `node check-config.js` to validate your configuration
 
 **Approval buttons not working**
 
@@ -435,9 +471,10 @@ module.exports = MyPlugin;
 
 **Logging not working**
 
-- Ensure log channel ID is correct in configuration
+- Run `node check-config.js` to verify log channel configuration
 - Verify bot has "Send Messages" permission in log channel
-- Check file system permissions for log file creation
+- Check `bot.log` file in the root directory for file-based logs
+- Ensure verification events are marked with `[VERIFICATION]` prefix in logs
 
 **DMs not being sent**
 
