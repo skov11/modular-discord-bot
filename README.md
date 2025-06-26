@@ -1,17 +1,21 @@
-# Discord Verification Bot
+# Modular Discord Bot
 
-A modular, plugin-based Discord bot built with Discord.js v14+. Originally designed for user verification via dual screenshot submission and admin approval, now extended with a flexible plugin system that allows easy addition of new features and commands.
+A flexible, plugin-based Discord bot framework built with Discord.js v14+. Features a modular architecture that allows easy addition and removal of functionality through plugins. Includes a comprehensive verification plugin for user verification via dual screenshot submission and admin approval.
 
 ## ✨ Features
 
-### Core Features
+### Core Bot Framework
 
 - **Plugin System**: Modular architecture allowing easy addition and removal of features
 - **Dynamic Command Loading**: Commands are loaded from plugins at runtime
 - **Plugin Configuration**: Each plugin can have its own configuration settings
-- **Hot-reload Support**: Plugins can be reloaded without restarting the bot
+- **Unified Logging**: All events logged to `bot.log` with plugin categorization
+- **Easy Extensibility**: Create new plugins to add any Discord bot functionality
+- **Configuration Validation**: Built-in tools to verify setup correctness
 
-### Verification Plugin Features
+### Included Plugins
+
+#### Verification Plugin
 
 - **Dual Screenshot Verification**: `/verify` command requires 2 screenshots with character name and guild name parameters
 - **Image Validation**: Automatic validation to ensure both uploads are valid image files (PNG, JPG, GIF, WebP)
@@ -29,7 +33,7 @@ A modular, plugin-based Discord bot built with Discord.js v14+. Originally desig
 
 ## 📋 Prerequisites
 
-Before setting up the bot, ensure you have:
+Before setting up the bot framework, ensure you have:
 
 - **Node.js** v16 or newer
 - **Discord account** with server admin permissions
@@ -92,8 +96,8 @@ nvm alias default 18
 
 ```bash
 # Clone the repository (or create project directory)
-git clone <your-repo-url> discord-verification-bot
-cd discord-verification-bot
+git clone <your-repo-url> modular-discord-bot
+cd modular-discord-bot
 
 # Install dependencies
 npm install
@@ -180,7 +184,11 @@ pm2 startup
 
 ## 🎮 Usage
 
-### For Users
+The bot framework comes with several plugins that provide different functionality. Below are examples using the included verification plugin.
+
+### Verification Plugin Usage
+
+#### For Users
 
 1. Use `/verify` command in the designated verification channel
 2. **Upload 2 screenshots** as proof of verification (both required)
@@ -197,7 +205,7 @@ pm2 startup
 - GIF (.gif)
 - WebP (.webp)
 
-### For Admins
+#### For Admins
 
 1. Monitor verification requests in the designated channel
 2. **Review both screenshots** displayed in the verification embed:
@@ -252,6 +260,8 @@ pm2 startup
 | `pm2 monit`                    | Monitor bot performance    |
 
 ## 🧪 Testing
+
+### Verification Plugin Testing
 
 1. **Test Dual Screenshot Verification Flow**
 
@@ -331,15 +341,16 @@ This tool will:
 
 ## 🆕 Recent Updates
 
-### Version 3.0 - Plugin System Architecture
+### Version 3.0 - Modular Bot Framework
 
-- **Plugin System**: Complete rewrite with modular plugin architecture
-- **Easy Extensibility**: Add new features by creating plugins
-- **Plugin Configuration**: Each plugin has its own configuration section
-- **Backward Compatible**: Verification plugin maintains all v2.0 features
-- **Unified Logging**: All logs now go to `bot.log` with clear event categorization
+- **Complete Architecture Redesign**: Transformed from a verification bot into a modular bot framework
+- **Plugin System**: Modular architecture allowing easy addition and removal of features
+- **Verification as Plugin**: Original verification functionality now exists as a plugin
+- **Easy Extensibility**: Add any Discord bot functionality by creating plugins
+- **Plugin Configuration**: Each plugin has its own organized configuration section
+- **Unified Logging**: All logs go to `bot.log` with clear plugin categorization
 - **Configuration Validation**: Added `check-config.js` tool for setup verification
-- **Better Organization**: Separated core bot logic from feature implementations
+- **Developer Friendly**: Clear separation between core framework and plugin implementations
 
 ### Version 2.0 - Dual Screenshot System
 
@@ -352,7 +363,7 @@ This tool will:
 
 ## 🔌 Plugin Development
 
-The bot now supports a plugin system. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for detailed documentation on creating custom plugins.
+This modular bot framework is designed for easy plugin development. Create custom plugins to add any Discord bot functionality you need. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for detailed documentation on creating custom plugins.
 
 ### Quick Plugin Example
 
@@ -383,12 +394,23 @@ module.exports = MyPlugin;
 
 ## 🔮 Future Enhancements
 
-### Core System
+### Bot Framework
 
 - [ ] **Plugin Hot Reload**: Reload plugins without restarting bot
 - [ ] **Plugin Dependencies**: Allow plugins to depend on other plugins
 - [ ] **Plugin Marketplace**: Central repository for community plugins
-- [ ] **Web Configuration**: Browser-based plugin management
+- [ ] **Web Dashboard**: Browser-based plugin management and configuration
+- [ ] **Plugin Templates**: Generators for common plugin types
+- [ ] **Inter-Plugin Communication**: Allow plugins to communicate with each other
+
+### Additional Plugin Ideas
+
+- [ ] **Moderation Plugin**: Auto-moderation, warnings, bans, and kicks
+- [ ] **Welcome Plugin**: Custom welcome messages and role assignment
+- [ ] **Music Plugin**: Music playback and queue management
+- [ ] **Economy Plugin**: Virtual currency and shop systems
+- [ ] **Leveling Plugin**: XP tracking and role rewards
+- [ ] **Ticket Plugin**: Support ticket system with private channels
 
 ### Verification Plugin
 
@@ -413,6 +435,7 @@ module.exports = MyPlugin;
 - Check that slash commands are properly deployed (happens automatically on startup)
 - Ensure bot is online and PM2 process is running
 - Run `node check-config.js` to validate your configuration
+- Check that the relevant plugin is enabled in config.json
 
 **Approval buttons not working**
 
