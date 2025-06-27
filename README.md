@@ -117,8 +117,8 @@ nvm alias default 18
 
 ```bash
 # Clone the repository
-git clone https://github.com/Zachdidit/discord-verification-bot.git
-cd discord-verification-bot
+git clone https://github.com/skov11/modular-discord-bot.git
+cd modular-discord-bot
 
 # Install dependencies
 npm install
@@ -138,7 +138,7 @@ Edit the configuration with your values:
 {
   "bot": {
     "token": "your_bot_token_here",
-    "clientId": "your_application_id_here", 
+    "clientId": "your_application_id_here",
     "guildId": "your_server_id_here",
     "enableUI": true,
     "uiPort": 3000,
@@ -146,10 +146,7 @@ Edit the configuration with your values:
       "enabled": false,
       "clientSecret": "your_discord_client_secret_here",
       "sessionSecret": "your_session_secret_here",
-      "allowedRoleIds": [
-        "admin_role_id_1",
-        "admin_role_id_2"
-      ],
+      "allowedRoleIds": ["admin_role_id_1", "admin_role_id_2"],
       "redirectUri": "http://localhost:3000/auth/discord/callback"
     }
   },
@@ -197,11 +194,13 @@ This will validate all required settings and provide helpful feedback about any 
 The verification plugin supports flexible configuration to adapt to different server needs:
 
 **Screenshot Requirements** (`screenshotCount`):
+
 - `0` - No screenshots required (text-only verification)
 - `1` - Single screenshot required
 - `2` - Dual screenshots required (default)
 
 **Field Requirements**:
+
 - `requireCharacterName` - Whether character name is required (default: `true`)
 - `requireGuildName` - Whether guild name is required (default: `true`)
 
@@ -275,6 +274,7 @@ The bot includes a comprehensive web-based management interface for configuratio
 ### Accessing the UI
 
 When `enableUI` is set to `true` in your config.json, the web interface will be available at:
+
 - **Web Interface**: `http://localhost:3000` (or your configured port)
 - **Real-time Updates**: WebSocket connection on port 3001
 
@@ -294,7 +294,7 @@ When `enableUI` is set to `true` in your config.json, the web interface will be 
 ### Using the UI
 
 1. **Bot Settings**: Configure token, client ID, guild ID, and authentication preferences
-2. **Plugin Configuration**: 
+2. **Plugin Configuration**:
    - Verification plugin with all settings (screenshot count, field requirements, messages)
    - Enable/disable plugins individually with toggle switches
    - Real-time validation and help text for all settings
@@ -442,6 +442,7 @@ The bot framework comes with several plugins that provide different functionalit
 ## 📊 Logging Events
 
 ### File Logging (`bot.log`)
+
 The bot logs all events to `bot.log` in the root directory:
 
 - **Bot startup/shutdown events**
@@ -456,6 +457,7 @@ The bot logs all events to `bot.log` in the root directory:
   - ⚠️ Configuration warnings and errors
 
 ### Discord Channel Logging
+
 Only specific events are sent to the Discord log channel:
 
 - ✅ **Verification approvals**: `AdminName verified UserName at [timestamp]`
@@ -463,6 +465,7 @@ Only specific events are sent to the Discord log channel:
 - ⚠️ **DM delivery failures**: `Failed to send denial DM to @User - user may have DMs disabled`
 
 ### Configuration Checking
+
 Use the configuration checker to validate your setup:
 
 ```bash
@@ -470,6 +473,7 @@ node check-config.js
 ```
 
 This tool will:
+
 - Verify all required configuration values are set
 - Check for missing channel IDs or role IDs
 - Provide helpful tips for common configuration issues
