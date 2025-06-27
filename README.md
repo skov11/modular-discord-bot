@@ -96,9 +96,9 @@ nvm alias default 18
 ### Step 3: Project Setup
 
 ```bash
-# Clone the repository (or create project directory)
-git clone <your-repo-url> modular-discord-bot
-cd modular-discord-bot
+# Clone the repository
+git clone https://github.com/Zachdidit/discord-verification-bot.git
+cd discord-verification-bot
 
 # Install dependencies
 npm install
