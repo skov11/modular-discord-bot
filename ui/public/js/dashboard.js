@@ -376,14 +376,12 @@ class BotDashboard {
                 </div>
                 
                 <div class="row mt-3">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <h6>Messages</h6>
                         <div class="mb-3">
                             <label for="approval-message" class="form-label">Approval Message</label>
                             <textarea class="form-control" id="approval-message" rows="2">${config.messages?.approvalMessage || '✅ Thank you for verifying! You have been approved.'}</textarea>
                         </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="mb-3">
                             <label for="denial-message-prefix" class="form-label">Denial Message Prefix</label>
                             <textarea class="form-control" id="denial-message-prefix" rows="2">${config.messages?.denialMessagePrefix || '❌ Your verification has been denied.'}</textarea>
