@@ -43,6 +43,50 @@
         "requireCharacterName": true,
         "requireGuildName": true
       }
+    },
+
+    "purge": {
+      "enabled": false,
+      "logging": {
+        "channelId": "LOG_CHANNEL_ID"
+      },
+      "autoPurge": {
+        "enabled": false,
+        "schedules": [
+          {
+            "enabled": true,
+            "name": "Daily cleanup",
+            "channelIds": ["CHANNEL_TO_PURGE_ID", "ANOTHER_CHANNEL_ID"],
+            "messageCount": 100,
+            "frequency": "daily",
+            "time": "00:00",
+            "cron": "0 0 * * *",
+            "timezone": "America/New_York"
+          },
+          {
+            "enabled": false,
+            "name": "Weekly multi-channel purge",
+            "channelIds": ["CHANNEL_1_ID", "CHANNEL_2_ID", "CHANNEL_3_ID"],
+            "messageCount": 0,
+            "frequency": "weekly",
+            "time": "02:00",
+            "daysOfWeek": [0, 6],
+            "cron": "0 2 * * 0,6",
+            "timezone": "UTC"
+          },
+          {
+            "enabled": false,
+            "name": "Monthly full cleanup",
+            "channelIds": ["MONTHLY_CHANNEL_ID"],
+            "messageCount": 0,
+            "frequency": "monthly",
+            "time": "01:00",
+            "dayOfMonth": 1,
+            "cron": "0 1 1 * *",
+            "timezone": "UTC"
+          }
+        ]
+      }
     }
   }
 }
