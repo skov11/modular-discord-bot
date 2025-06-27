@@ -15,10 +15,39 @@ class UIServer {
         this.server = null;
         this.wss = null;
         this.authManager = null;
+        this.config = null;
         
+        // Load config first before any setup
+        this.loadConfig();
+        
+        // Now setup everything else
         this.setupMiddleware();
         this.setupAuth();
         this.setupRoutes();
+    }
+    
+    loadConfig() {
+        if (!fs.existsSync(this.configPath)) {
+            this.config = {
+                bot: {
+                    token: '',
+                    clientId: '',
+                    guildId: '',
+                    enableUI: false,
+                    uiPort: 3000
+                },
+                plugins: {}
+            };
+            return;
+        }
+        
+        try {
+            const configData = fs.readFileSync(this.configPath, 'utf8');
+            this.config = JSON.parse(configData);
+        } catch (error) {
+            console.error('[UI] Failed to load config:', error);
+            this.config = {};
+        }
     }
 
     setBotInstance(botInstance) {
@@ -33,10 +62,9 @@ class UIServer {
         this.app.set('views', path.join(__dirname, 'views'));
         
         // Session middleware (needed for authentication)
-        const config = this.loadConfig();
-        if (config.bot?.uiAuth?.enabled) {
+        if (this.config.bot?.uiAuth?.enabled) {
             this.app.use(session({
-                secret: config.bot.uiAuth.sessionSecret || 'fallback-secret-change-this',
+                secret: this.config.bot.uiAuth.sessionSecret || 'fallback-secret-change-this',
                 resave: false,
                 saveUninitialized: false,
                 cookie: {
@@ -48,7 +76,7 @@ class UIServer {
     }
 
     setupAuth() {
-        const config = this.loadConfig();
+        const config = this.config;
         if (config.bot?.uiAuth?.enabled) {
             this.authManager = new AuthManager(config.bot, this.botInstance);
             this.authManager.setupRoutes(this.app);
@@ -70,8 +98,9 @@ class UIServer {
         // API Routes (protected)
         this.app.get('/api/config', requireAuth, (req, res) => {
             try {
-                const config = this.loadConfig();
-                res.json(config);
+                // Reload config from file to ensure we have the latest
+                this.loadConfig();
+                res.json(this.config);
             } catch (error) {
                 res.status(500).json({ error: 'Failed to load config', details: error.message });
             }
@@ -129,6 +158,96 @@ class UIServer {
             }
         });
         
+        this.app.get('/api/roles', requireAuth, async (req, res) => {
+            try {
+                if (this.botInstance && this.botInstance.client && this.botInstance.client.guilds.cache.size > 0) {
+                    // Get the guild using the configured guild ID
+                    const guildId = this.config.bot?.guildId;
+                    let guild = null;
+                    
+                    if (guildId) {
+                        guild = this.botInstance.client.guilds.cache.get(guildId);
+                    }
+                    
+                    if (!guild) {
+                        // Fallback to first guild if configured guild not found
+                        guild = this.botInstance.client.guilds.cache.first();
+                    }
+                    
+                    if (!guild) {
+                        return res.json({ success: false, roles: [], message: 'No guild found' });
+                    }
+                    
+                    // Get all roles except @everyone
+                    const roles = guild.roles.cache
+                        .filter(role => role.name !== '@everyone')
+                        .map(role => ({
+                            id: role.id,
+                            name: role.name,
+                            color: role.hexColor,
+                            position: role.position,
+                            managed: role.managed // Indicates if it's a bot role
+                        }))
+                        .sort((a, b) => b.position - a.position); // Sort by position (highest first)
+                    
+                    console.log(`[UI] Found ${roles.length} roles in guild ${guild.name}`);
+                    res.json({ success: true, roles });
+                } else {
+                    res.json({ success: false, roles: [], message: 'Bot not connected to Discord' });
+                }
+            } catch (error) {
+                console.error('[UI] Error fetching roles:', error);
+                res.status(500).json({ error: 'Failed to fetch roles', details: error.message });
+            }
+        });
+        
+        this.app.get('/api/channels', requireAuth, async (req, res) => {
+            try {
+                if (this.botInstance && this.botInstance.client && this.botInstance.client.guilds.cache.size > 0) {
+                    // Get the guild using the configured guild ID
+                    const guildId = this.config.bot?.guildId;
+                    let guild = null;
+                    
+                    if (guildId) {
+                        guild = this.botInstance.client.guilds.cache.get(guildId);
+                    }
+                    
+                    if (!guild) {
+                        // Fallback to first guild if configured guild not found
+                        guild = this.botInstance.client.guilds.cache.first();
+                    }
+                    
+                    if (!guild) {
+                        return res.json({ success: false, channels: [], message: 'No guild found' });
+                    }
+                    
+                    // Get all text channels
+                    const channels = guild.channels.cache
+                        .filter(channel => channel.type === 0) // 0 = GUILD_TEXT
+                        .map(channel => ({
+                            id: channel.id,
+                            name: channel.name,
+                            category: channel.parent ? channel.parent.name : 'No Category'
+                        }))
+                        .sort((a, b) => {
+                            // Sort by category first, then by name
+                            if (a.category !== b.category) {
+                                return a.category.localeCompare(b.category);
+                            }
+                            return a.name.localeCompare(b.name);
+                        });
+                    
+                    console.log(`[UI] Found ${channels.length} text channels in guild ${guild.name}`);
+                    res.json({ success: true, channels });
+                } else {
+                    res.json({ success: false, channels: [], message: 'Bot not connected to Discord' });
+                }
+            } catch (error) {
+                console.error('[UI] Error fetching channels:', error);
+                res.status(500).json({ error: 'Failed to fetch channels', details: error.message });
+            }
+        });
+        
         this.app.post('/api/plugins/:pluginName/reload', requireAuth, async (req, res) => {
             try {
                 const { pluginName } = req.params;
@@ -163,26 +282,10 @@ class UIServer {
         });
     }
 
-    loadConfig() {
-        if (!fs.existsSync(this.configPath)) {
-            return {
-                bot: {
-                    token: '',
-                    clientId: '',
-                    guildId: '',
-                    enableUI: false,
-                    uiPort: 3000
-                },
-                plugins: {}
-            };
-        }
-        
-        const configData = fs.readFileSync(this.configPath, 'utf8');
-        return JSON.parse(configData);
-    }
-
     saveConfig(config) {
         fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
+        // Update internal config reference
+        this.config = config;
     }
 
     notifyConfigChange(config) {
@@ -203,11 +306,15 @@ class UIServer {
         const pluginsDir = path.join(__dirname, '..', 'src', 'plugins');
         const plugins = [];
         
+        // Exclude example plugins from UI
+        const excludedPlugins = ['example'];
+        
         if (fs.existsSync(pluginsDir)) {
             const pluginDirs = fs.readdirSync(pluginsDir).filter(dir => {
                 const pluginPath = path.join(pluginsDir, dir);
                 return fs.statSync(pluginPath).isDirectory() && 
-                       fs.existsSync(path.join(pluginPath, 'index.js'));
+                       fs.existsSync(path.join(pluginPath, 'index.js')) &&
+                       !excludedPlugins.includes(dir);
             });
             
             pluginDirs.forEach(dir => {

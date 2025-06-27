@@ -48,7 +48,16 @@ class PluginManager {
             return fs.statSync(fullPath).isDirectory();
         });
 
+        // Exclude example plugins from loading
+        const excludedPlugins = ['example'];
+
         for (const pluginDir of pluginDirs) {
+            // Skip excluded plugins
+            if (excludedPlugins.includes(pluginDir)) {
+                console.log(`[PluginManager] Skipping example plugin: ${pluginDir}`);
+                continue;
+            }
+
             const pluginPath = path.join(directory, pluginDir);
             const indexPath = path.join(pluginPath, 'index.js');
             
