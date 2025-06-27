@@ -1,10 +1,24 @@
-# Discord Verification Bot
+# Modular Discord Bot
 
-A self-hosted Discord bot for verifying users via dual screenshot submission and admin approval through an intuitive button interface. Built with Discord.js v14+ and includes comprehensive logging capabilities and automatic channel moderation.
+A flexible, plugin-based Discord bot framework built with Discord.js v14+. Features a modular architecture that allows easy addition and removal of functionality through plugins. Includes a comprehensive verification plugin for user verification via dual screenshot submission and admin approval.
 
 ## ✨ Features
 
-- **Dual Screenshot Verification**: `/verify` command requires 2 screenshots with character name and guild name parameters
+### Core Bot Framework
+
+- **Plugin System**: Modular architecture allowing easy addition and removal of features
+- **Dynamic Command Loading**: Commands are loaded from plugins at runtime
+- **Plugin Configuration**: Each plugin can have its own configuration settings
+- **Unified Logging**: All events logged to `bot.log` with plugin categorization
+- **Easy Extensibility**: Create new plugins to add any Discord bot functionality
+- **Configuration Validation**: Built-in tools to verify setup correctness
+
+### Included Plugins
+
+#### Verification Plugin
+
+- **Configurable Screenshot Requirements**: Support for 0, 1, or 2 screenshots based on configuration
+- **Optional Character/Guild Names**: Configure whether character and guild names are required or optional
 - **Image Validation**: Automatic validation to ensure both uploads are valid image files (PNG, JPG, GIF, WebP)
 - **Enhanced Display System**: Dual-embed display showing both screenshots clearly in verification channels
 - **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" and "Deny Verification" buttons
@@ -20,7 +34,7 @@ A self-hosted Discord bot for verifying users via dual screenshot submission and
 
 ## 📋 Prerequisites
 
-Before setting up the bot, ensure you have:
+Before setting up the bot framework, ensure you have:
 
 - **Node.js** v16 or newer
 - **Discord account** with server admin permissions
@@ -82,52 +96,116 @@ nvm alias default 18
 ### Step 3: Project Setup
 
 ```bash
-# Create project directory
-mkdir discord-verification-bot
+# Clone the repository
+git clone https://github.com/Zachdidit/discord-verification-bot.git
 cd discord-verification-bot
 
-# Initialize npm project
-npm init -y
-
 # Install dependencies
-npm install discord.js
+npm install
 ```
 
 ### Step 4: Configuration
 
-Create a `config.json` file in your project root with the following structure:
+The bot now uses a plugin-based configuration system. Create a `config.json` file based on `config.example.json`:
+
+```bash
+cp config.example.json config.json
+```
+
+Edit the configuration with your values:
 
 ```json
 {
-  "token": "your_bot_token_here",
-  "clientId": "your_application_id_here",
-  "guildId": "your_server_id_here",
-  "verifyChannelId": "channel_for_verification_requests",
-  "verifyCommandChannelId": "channel_where_users_use_verify_command",
-  "logChannelId": "channel_for_logs",
-  "howToVerifyID": "channel_with_verification_instructions",
-  "atreidesRoleId": "role_to_assign_verified_users",
-  "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"],
-  "approvalMessage": "✅ Thank you for verifying! You have been approved.",
-  "denialMessagePrefix": "❌ Your verification has been denied.",
-  "debugMode": true
+  "bot": {
+    "token": "your_bot_token_here",
+    "clientId": "your_application_id_here", 
+    "guildId": "your_server_id_here"
+  },
+
+  "plugins": {
+    "verification": {
+      "enabled": true,
+      "channels": {
+        "verifyChannelId": "channel_for_verification_requests",
+        "verifyCommandChannelId": "channel_where_users_use_verify_command",
+        "logChannelId": "channel_for_logs",
+        "howToVerifyID": "channel_with_verification_instructions"
+      },
+      "roles": {
+        "verifiedRoleId": "role_to_assign_verified_users",
+        "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"]
+      },
+      "messages": {
+        "approvalMessage": "✅ Thank you for verifying! You have been approved.",
+        "denialMessagePrefix": "❌ Your verification has been denied."
+      },
+      "settings": {
+        "debugMode": true,
+        "screenshotCount": 2,
+        "requireCharacterName": true,
+        "requireGuildName": true
+      }
+    }
+  }
 }
 ```
 
-### Step 5: Deploy Commands
+#### Validating Your Configuration
 
-Register the slash commands with Discord:
+Before starting the bot, you can check if your configuration is properly set up:
 
 ```bash
-node deploy-commands.js
+node check-config.js
 ```
 
-### Step 6: Start the Bot
+This will validate all required settings and provide helpful feedback about any missing or incorrect values.
+
+#### Verification Plugin Configuration Options
+
+The verification plugin supports flexible configuration to adapt to different server needs:
+
+**Screenshot Requirements** (`screenshotCount`):
+- `0` - No screenshots required (text-only verification)
+- `1` - Single screenshot required
+- `2` - Dual screenshots required (default)
+
+**Field Requirements**:
+- `requireCharacterName` - Whether character name is required (default: `true`)
+- `requireGuildName` - Whether guild name is required (default: `true`)
+
+**Example configurations:**
+
+```json
+// Gaming server with full verification
+"settings": {
+  "screenshotCount": 2,
+  "requireCharacterName": true,
+  "requireGuildName": true
+}
+
+// Simple verification with minimal requirements
+"settings": {
+  "screenshotCount": 0,
+  "requireCharacterName": false,
+  "requireGuildName": false
+}
+
+// Single screenshot with character name only
+"settings": {
+  "screenshotCount": 1,
+  "requireCharacterName": true,
+  "requireGuildName": false
+}
+```
+
+### Step 5: Start the Bot
+
+The bot now automatically deploys commands when it starts:
 
 #### Development Mode
 
 ```bash
-node discord_verification_bot.js
+node index.js
 ```
 
 #### Production Mode (with PM2)
@@ -137,7 +215,7 @@ node discord_verification_bot.js
 sudo npm install -g pm2
 
 # Start the bot
-pm2 start discord_verification_bot.js --name verification-bot
+pm2 start index.js --name verification-bot
 
 # Save PM2 configuration
 pm2 save
@@ -148,7 +226,11 @@ pm2 startup
 
 ## 🎮 Usage
 
-### For Users
+The bot framework comes with several plugins that provide different functionality. Below are examples using the included verification plugin.
+
+### Verification Plugin Usage
+
+#### For Users
 
 1. Use `/verify` command in the designated verification channel
 2. **Upload 2 screenshots** as proof of verification (both required)
@@ -165,7 +247,7 @@ pm2 startup
 - GIF (.gif)
 - WebP (.webp)
 
-### For Admins
+#### For Admins
 
 1. Monitor verification requests in the designated channel
 2. **Review both screenshots** displayed in the verification embed:
@@ -221,6 +303,8 @@ pm2 startup
 
 ## 🧪 Testing
 
+### Verification Plugin Testing
+
 1. **Test Dual Screenshot Verification Flow**
 
    - Use `/verify` command in the correct channel
@@ -263,18 +347,52 @@ pm2 startup
 
 ## 📊 Logging Events
 
-The bot logs the following events to both file and Discord:
+### File Logging (`bot.log`)
+The bot logs all events to `bot.log` in the root directory:
 
-- ✅ Successful verification approvals with dual screenshot confirmation
-- ❌ Verification denials with reasons
-- 🖼️ Screenshot validation results (file types, sizes, etc.)
-- ⚠️ Failed DM deliveries (when users have DMs disabled)
-- 🤖 Auto-response DMs sent to users
-- ❌ Failed DM attempts with public fallbacks
-- 🔍 Debug information including both screenshot details (when debug mode enabled)
-- 📁 File type validation failures and successes
+- **Bot startup/shutdown events**
+- **Plugin loading/unloading**
+- **Command deployment status**
+- **Verification events** (marked with `[VERIFICATION]`):
+  - ✅ Successful verification approvals
+  - ❌ Verification denials with reasons
+  - 📝 Nickname updates (success/failure)
+  - 💌 DM delivery status (success/failure)
+  - 🔍 Debug information (when debug mode enabled)
+  - ⚠️ Configuration warnings and errors
+
+### Discord Channel Logging
+Only specific events are sent to the Discord log channel:
+
+- ✅ **Verification approvals**: `AdminName verified UserName at [timestamp]`
+- ❌ **Verification denials**: `@Admin denied verification for @User. Reason: [reason]`
+- ⚠️ **DM delivery failures**: `Failed to send denial DM to @User - user may have DMs disabled`
+
+### Configuration Checking
+Use the configuration checker to validate your setup:
+
+```bash
+node check-config.js
+```
+
+This tool will:
+- Verify all required configuration values are set
+- Check for missing channel IDs or role IDs
+- Provide helpful tips for common configuration issues
+- Show which settings are optional vs required
 
 ## 🆕 Recent Updates
+
+### Version 3.0 - Modular Bot Framework
+
+- **Complete Architecture Redesign**: Transformed from a verification bot into a modular bot framework
+- **Plugin System**: Modular architecture allowing easy addition and removal of features
+- **Verification as Plugin**: Original verification functionality now exists as a plugin
+- **Easy Extensibility**: Add any Discord bot functionality by creating plugins
+- **Plugin Configuration**: Each plugin has its own organized configuration section
+- **Unified Logging**: All logs go to `bot.log` with clear plugin categorization
+- **Configuration Validation**: Added `check-config.js` tool for setup verification
+- **Developer Friendly**: Clear separation between core framework and plugin implementations
 
 ### Version 2.0 - Dual Screenshot System
 
@@ -285,12 +403,62 @@ The bot logs the following events to both file and Discord:
 - **Enhanced Logging**: Detailed logging of both screenshot uploads
 - **Maintained Compatibility**: All existing features work with new dual screenshot system
 
+## 🔌 Plugin Development
+
+This modular bot framework is designed for easy plugin development. Create custom plugins to add any Discord bot functionality you need. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for detailed documentation on creating custom plugins.
+
+### Quick Plugin Example
+
+```javascript
+const Plugin = require("../../core/Plugin");
+const { SlashCommandBuilder } = require("discord.js");
+
+class MyPlugin extends Plugin {
+  async load() {
+    const myCommand = {
+      data: new SlashCommandBuilder()
+        .setName("mycommand")
+        .setDescription("My custom command"),
+      execute: async (interaction) => {
+        await interaction.reply("Hello from my plugin!");
+      },
+    };
+    this.registerCommand(myCommand);
+  }
+
+  async unload() {
+    this.log("Plugin unloaded");
+  }
+}
+
+module.exports = MyPlugin;
+```
+
 ## 🔮 Future Enhancements
+
+### Bot Framework
+
+- [ ] **Plugin Hot Reload**: Reload plugins without restarting bot
+- [ ] **Plugin Dependencies**: Allow plugins to depend on other plugins
+- [ ] **Plugin Marketplace**: Central repository for community plugins
+- [ ] **Web Dashboard**: Browser-based plugin management and configuration
+- [ ] **Plugin Templates**: Generators for common plugin types
+- [ ] **Inter-Plugin Communication**: Allow plugins to communicate with each other
+
+### Additional Plugin Ideas
+
+- [ ] **Moderation Plugin**: Auto-moderation, warnings, bans, and kicks
+- [ ] **Welcome Plugin**: Custom welcome messages and role assignment
+- [ ] **Music Plugin**: Music playback and queue management
+- [ ] **Economy Plugin**: Virtual currency and shop systems
+- [ ] **Leveling Plugin**: XP tracking and role rewards
+- [ ] **Ticket Plugin**: Support ticket system with private channels
+
+### Verification Plugin
 
 - [ ] **Request Expiration**: Auto-expire verification requests after set time
 - [ ] **Audit Trail**: Enhanced logging with user IDs and timestamps
 - [ ] **Multi-Server Support**: Support for multiple Discord servers
-- [ ] **Web Dashboard**: Browser-based admin interface for managing verifications
 - [ ] **Custom Auto-Response Messages**: Configurable response templates
 - [ ] **Whitelist System**: Allow certain users to bypass auto-moderation
 - [ ] **Bulk Verification**: Process multiple verifications at once
@@ -306,8 +474,10 @@ The bot logs the following events to both file and Discord:
 **Bot not responding to commands**
 
 - Verify bot has necessary permissions in the channel
-- Check that slash commands are properly deployed with updated dual screenshot parameters
+- Check that slash commands are properly deployed (happens automatically on startup)
 - Ensure bot is online and PM2 process is running
+- Run `node check-config.js` to validate your configuration
+- Check that the relevant plugin is enabled in config.json
 
 **Approval buttons not working**
 
@@ -366,9 +536,10 @@ The bot logs the following events to both file and Discord:
 
 **Logging not working**
 
-- Ensure log channel ID is correct in configuration
+- Run `node check-config.js` to verify log channel configuration
 - Verify bot has "Send Messages" permission in log channel
-- Check file system permissions for log file creation
+- Check `bot.log` file in the root directory for file-based logs
+- Ensure verification events are marked with `[VERIFICATION]` prefix in logs
 
 **DMs not being sent**
 

@@ -1,0 +1,36 @@
+{
+  "bot": {
+    "token": "YOUR_BOT_TOKEN",
+    "clientId": "YOUR_CLIENT_ID",
+    "guildId": "YOUR_GUILD_ID"
+  },
+
+  "plugins": {
+    "verification": {
+      "enabled": true,
+      "channels": {
+        "verifyChannelId": "ADMIN_VERIFICATION_CHANNEL_ID",
+        "verifyCommandChannelId": "USER_COMMAND_CHANNEL_ID",
+        "logChannelId": "LOG_CHANNEL_ID",
+        "howToVerifyID": "INSTRUCTIONS_CHANNEL_ID"
+      },
+      "roles": {
+        "verifiedRoleId": "VERIFIED_ROLE_ID",
+        "verifierRoleIds": [
+          "ADMIN_ROLE_ID_1", 
+          "ADMIN_ROLE_ID_2"
+        ]
+      },
+      "messages": {
+        "approvalMessage": "✅ Thank you for verifying! You have been approved.",
+        "denialMessagePrefix": "❌ Your verification has been denied."
+      },
+      "settings": {
+        "debugMode": false,
+        "screenshotCount": 2,
+        "requireCharacterName": true,
+        "requireGuildName": true
+      }
+    }
+  }
+}
