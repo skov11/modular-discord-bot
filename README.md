@@ -1,28 +1,48 @@
 # Modular Discord Bot
 
-A flexible, plugin-based Discord bot framework built with Discord.js v14+. Features a modular architecture that allows easy addition and removal of functionality through plugins. Includes a comprehensive verification plugin for user verification via dual screenshot submission and admin approval.
+A flexible, plugin-based Discord bot framework built with Discord.js v14+. Features a modular architecture with a comprehensive web-based management interface, Discord OAuth2 authentication, and hot-reload capabilities. Includes a feature-rich verification plugin for user verification via configurable screenshot submission and admin approval.
 
 ## ✨ Features
 
 ### Core Bot Framework
 
 - **Plugin System**: Modular architecture allowing easy addition and removal of features
-- **Dynamic Command Loading**: Commands are loaded from plugins at runtime
+- **Hot-Reload Capability**: Plugins reload instantly when configuration changes, no bot restart required
+- **Dynamic Command Loading**: Commands are loaded from plugins at runtime and update immediately
 - **Plugin Configuration**: Each plugin can have its own configuration settings
 - **Unified Logging**: All events logged to `bot.log` with plugin categorization
 - **Easy Extensibility**: Create new plugins to add any Discord bot functionality
 - **Configuration Validation**: Built-in tools to verify setup correctness
 
+### Web Management Interface
+
+- **Real-time Dashboard**: Comprehensive web-based configuration management
+- **Dark Theme UI**: Modern, responsive interface optimized for all devices
+- **Live Configuration**: Change settings and see immediate effects without restarts
+- **Plugin Management**: Enable/disable plugins and configure settings through the UI
+- **Change Tracking**: Smart save button that only activates when changes are made
+- **Section Persistence**: Modified plugin sections stay expanded for continued editing
+- **Hot-Reload Integration**: Automatic plugin reloading when settings change
+
+### Security & Authentication
+
+- **Discord OAuth2**: Secure authentication using Discord accounts
+- **Role-Based Access**: Restrict access to specific Discord roles
+- **Session Management**: Secure session handling with configurable expiration
+- **Optional Authentication**: Can be disabled for development or trusted environments
+- **Audit Trail**: All configuration changes logged with user information
+
 ### Included Plugins
 
 #### Verification Plugin
 
-- **Configurable Screenshot Requirements**: Support for 0, 1, or 2 screenshots based on configuration
-- **Optional Character/Guild Names**: Configure whether character and guild names are required or optional
-- **Image Validation**: Automatic validation to ensure both uploads are valid image files (PNG, JPG, GIF, WebP)
-- **Enhanced Display System**: Dual-embed display showing both screenshots clearly in verification channels
-- **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" and "Deny Verification" buttons
-- **Verification Denial System**: Moderators can deny verification requests with mandatory reason documentation
+- **Flexible Screenshot Requirements**: Support for 0, 1, or 2 screenshots based on configuration
+- **Dynamic Field Requirements**: Configure character and guild names as required or optional independently
+- **Real-time Command Updates**: Verification command structure updates immediately when settings change
+- **Image Validation**: Automatic validation to ensure uploads are valid image files (PNG, JPG, GIF, WebP)
+- **Enhanced Display System**: Multi-embed display showing screenshots clearly in verification channels
+- **Admin Approval System**: Interactive approval/denial buttons with comprehensive admin controls
+- **Verification Denial System**: Moderators can deny requests with mandatory reason documentation
 - **Resubmission Control**: Denied users must resubmit verification before being eligible for approval
 - **Role-Based Permissions**: Only users with specified roles can approve verifications
 - **Duplicate Prevention**: Prevents users from submitting multiple verification requests
@@ -30,7 +50,7 @@ A flexible, plugin-based Discord bot framework built with Discord.js v14+. Featu
 - **Channel Auto-Moderation**: Automatically deletes non-command messages to keep verification channels clean
 - **Smart DM Fallback**: Sends private DMs to users with public reply fallback if DMs are disabled
 - **Comprehensive Logging**: Records verification events to both file system and Discord channels
-- **Process Management**: PM2 integration for reliable bot hosting
+- **Hot-Configuration**: All verification settings can be changed through the web UI without restart
 
 ## 📋 Prerequisites
 
@@ -97,8 +117,8 @@ nvm alias default 18
 
 ```bash
 # Clone the repository
-git clone https://github.com/Zachdidit/discord-verification-bot.git
-cd discord-verification-bot
+git clone https://github.com/skov11/modular-discord-bot.git
+cd modular-discord-bot
 
 # Install dependencies
 npm install
@@ -118,8 +138,17 @@ Edit the configuration with your values:
 {
   "bot": {
     "token": "your_bot_token_here",
-    "clientId": "your_application_id_here", 
-    "guildId": "your_server_id_here"
+    "clientId": "your_application_id_here",
+    "guildId": "your_server_id_here",
+    "enableUI": true,
+    "uiPort": 3000,
+    "uiAuth": {
+      "enabled": false,
+      "clientSecret": "your_discord_client_secret_here",
+      "sessionSecret": "your_session_secret_here",
+      "allowedRoleIds": ["admin_role_id_1", "admin_role_id_2"],
+      "redirectUri": "http://localhost:3000/auth/discord/callback"
+    }
   },
 
   "plugins": {
@@ -165,11 +194,13 @@ This will validate all required settings and provide helpful feedback about any 
 The verification plugin supports flexible configuration to adapt to different server needs:
 
 **Screenshot Requirements** (`screenshotCount`):
+
 - `0` - No screenshots required (text-only verification)
 - `1` - Single screenshot required
 - `2` - Dual screenshots required (default)
 
 **Field Requirements**:
+
 - `requireCharacterName` - Whether character name is required (default: `true`)
 - `requireGuildName` - Whether guild name is required (default: `true`)
 
@@ -200,7 +231,7 @@ The verification plugin supports flexible configuration to adapt to different se
 
 ### Step 5: Start the Bot
 
-The bot now automatically deploys commands when it starts:
+The bot automatically deploys commands when it starts. If `enableUI` is set to `true` in config.json, the web management interface will start automatically on the configured port:
 
 #### Development Mode
 
@@ -208,20 +239,83 @@ The bot now automatically deploys commands when it starts:
 node index.js
 ```
 
+The bot and web interface will start together. Access the dashboard at `http://localhost:3000` (or your configured port).
+
 #### Production Mode (with PM2)
 
 ```bash
 # Install PM2 globally
 sudo npm install -g pm2
 
-# Start the bot
-pm2 start index.js --name verification-bot
+# Start the bot with UI
+pm2 start index.js --name discord-bot
 
 # Save PM2 configuration
 pm2 save
 
 # Setup auto-start on system reboot
 pm2 startup
+```
+
+### Step 6: Access the Web Interface
+
+Once the bot is running, you can access the management dashboard:
+
+- **URL**: `http://localhost:3000` (or your configured `uiPort`)
+- **Authentication**: If enabled, you'll be redirected to Discord OAuth2 login
+- **Features**: Real-time configuration, plugin management, and bot monitoring
+
+For authentication setup, see [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) for detailed instructions.
+
+## 🌐 Web Management Interface
+
+The bot includes a comprehensive web-based management interface for configuration and monitoring.
+
+### Accessing the UI
+
+When `enableUI` is set to `true` in your config.json, the web interface will be available at:
+
+- **Web Interface**: `http://localhost:3000` (or your configured port)
+- **Real-time Updates**: WebSocket connection on port 3001
+
+### Key Features
+
+- **Dynamic Configuration**: Modify bot and plugin settings with instant effects
+- **Real-time Status**: Monitor bot connection status and performance
+- **Plugin Management**: Enable/disable plugins and configure their settings
+- **Hot-Reload**: Plugins reload automatically when configuration changes
+- **Change Tracking**: Save button only activates when actual changes are made
+- **Collapsible Sections**: Organize plugin configurations with expandable sections
+- **Section Persistence**: Modified sections stay open after saving changes
+- **Manual Plugin Reload**: Individual reload buttons for each plugin
+- **Dark Theme**: Modern, eye-friendly interface optimized for extended use
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+
+### Using the UI
+
+1. **Bot Settings**: Configure token, client ID, guild ID, and authentication preferences
+2. **Plugin Configuration**:
+   - Verification plugin with all settings (screenshot count, field requirements, messages)
+   - Enable/disable plugins individually with toggle switches
+   - Real-time validation and help text for all settings
+   - Collapsible sections to focus on specific plugin configuration
+3. **Actions**:
+   - Save configuration changes (auto-activates when changes detected)
+   - Manual plugin reload buttons for individual plugins
+   - Restart bot (when needed for major changes)
+   - Real-time bot status monitoring
+
+### Production Deployment
+
+The UI runs integrated with the main bot process when enabled:
+
+```bash
+# Start bot with UI (production)
+pm2 start index.js --name discord-bot
+
+# Or start without UI
+# Set "enableUI": false in config.json first
+pm2 start index.js --name discord-bot
 ```
 
 ## 🎮 Usage
@@ -348,6 +442,7 @@ The bot framework comes with several plugins that provide different functionalit
 ## 📊 Logging Events
 
 ### File Logging (`bot.log`)
+
 The bot logs all events to `bot.log` in the root directory:
 
 - **Bot startup/shutdown events**
@@ -362,6 +457,7 @@ The bot logs all events to `bot.log` in the root directory:
   - ⚠️ Configuration warnings and errors
 
 ### Discord Channel Logging
+
 Only specific events are sent to the Discord log channel:
 
 - ✅ **Verification approvals**: `AdminName verified UserName at [timestamp]`
@@ -369,6 +465,7 @@ Only specific events are sent to the Discord log channel:
 - ⚠️ **DM delivery failures**: `Failed to send denial DM to @User - user may have DMs disabled`
 
 ### Configuration Checking
+
 Use the configuration checker to validate your setup:
 
 ```bash
@@ -376,12 +473,24 @@ node check-config.js
 ```
 
 This tool will:
+
 - Verify all required configuration values are set
 - Check for missing channel IDs or role IDs
 - Provide helpful tips for common configuration issues
 - Show which settings are optional vs required
 
 ## 🆕 Recent Updates
+
+### Version 4.0 - Web Management & Hot-Reload
+
+- **Web Management Interface**: Comprehensive dashboard for real-time bot configuration
+- **Discord OAuth2 Authentication**: Role-based access control with Discord login
+- **Hot-Reload System**: Plugins reload automatically when configuration changes
+- **Dark Theme UI**: Modern, responsive interface optimized for all devices
+- **Change Tracking**: Smart save system that only activates when changes are made
+- **Plugin Management**: Individual plugin controls with manual reload buttons
+- **Real-time Updates**: WebSocket integration for live configuration updates
+- **Section Persistence**: Modified plugin sections stay expanded for better UX
 
 ### Version 3.0 - Modular Bot Framework
 
@@ -438,12 +547,14 @@ module.exports = MyPlugin;
 
 ### Bot Framework
 
-- [ ] **Plugin Hot Reload**: Reload plugins without restarting bot
+- [x] **Plugin Hot Reload**: Reload plugins without restarting bot ✅
+- [x] **Web Dashboard**: Browser-based plugin management and configuration ✅
 - [ ] **Plugin Dependencies**: Allow plugins to depend on other plugins
 - [ ] **Plugin Marketplace**: Central repository for community plugins
-- [ ] **Web Dashboard**: Browser-based plugin management and configuration
 - [ ] **Plugin Templates**: Generators for common plugin types
 - [ ] **Inter-Plugin Communication**: Allow plugins to communicate with each other
+- [ ] **API Integration**: REST API for external tool integration
+- [ ] **Multi-Guild Support**: Manage multiple Discord servers from one interface
 
 ### Additional Plugin Ideas
 
@@ -478,6 +589,8 @@ module.exports = MyPlugin;
 - Ensure bot is online and PM2 process is running
 - Run `node check-config.js` to validate your configuration
 - Check that the relevant plugin is enabled in config.json
+- Try using the manual plugin reload button in the web interface
+- Check the web dashboard for any error messages or warnings
 
 **Approval buttons not working**
 
@@ -533,6 +646,30 @@ module.exports = MyPlugin;
 - Verify supported image formats are being used
 - Monitor logs for specific upload validation errors
 - Test with different image formats and sizes
+
+**Web interface not accessible**
+
+- Verify `enableUI` is set to `true` in config.json
+- Check that the configured `uiPort` is not in use by another application
+- Ensure no firewall is blocking the port
+- Check browser console for JavaScript errors
+- Verify the bot process is running and UI server started successfully
+
+**Authentication issues**
+
+- Ensure Discord OAuth2 settings are correctly configured (see AUTHENTICATION_SETUP.md)
+- Verify `allowedRoleIds` contains your Discord role IDs
+- Check that `clientSecret` and `sessionSecret` are properly set
+- Confirm you're a member of the configured Discord server
+- Try disabling authentication temporarily by setting `uiAuth.enabled: false`
+
+**Plugin reload failures**
+
+- Check the browser console and bot logs for specific error messages
+- Verify the plugin configuration is valid JSON
+- Try saving configuration changes instead of manual reload
+- Restart the bot if hot-reload continues to fail
+- Check file permissions on the plugin directory
 
 **Logging not working**
 

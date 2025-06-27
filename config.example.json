@@ -2,7 +2,19 @@
   "bot": {
     "token": "YOUR_BOT_TOKEN",
     "clientId": "YOUR_CLIENT_ID",
-    "guildId": "YOUR_GUILD_ID"
+    "guildId": "YOUR_GUILD_ID",
+    "enableUI": true,
+    "uiPort": 3000,
+    "uiAuth": {
+      "enabled": false,
+      "clientSecret": "your_discord_client_secret_here",
+      "sessionSecret": "your_session_secret_here",
+      "allowedRoleIds": [
+        "ADMIN_ROLE_ID_1",
+        "ADMIN_ROLE_ID_2"
+      ],
+      "redirectUri": "http://localhost:3000/auth/discord/callback"
+    }
   },
 
   "plugins": {
