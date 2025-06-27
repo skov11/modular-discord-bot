@@ -276,6 +276,233 @@ This will validate:
    - Verify individual deletion with delays
    - Check logs for bulk vs individual delete records
 
+## Moderation Plugin Testing
+
+### Basic Moderation Commands
+
+1. **Timeout Command**:
+   ```
+   /mod timeout user:@testuser duration:5 reason:Testing timeout
+   ```
+   - Verify user receives timeout status
+   - Check timeout duration is correct
+   - Test with various duration values (1-40320 minutes)
+   - Verify removal of timeout after duration expires
+
+2. **Kick Command**:
+   ```
+   /mod kick user:@testuser reason:Testing kick functionality
+   ```
+   - Verify user is removed from server
+   - Check kick appears in Discord audit log
+   - Test with and without reason
+
+3. **Ban/Unban Commands**:
+   ```
+   /mod ban user:@testuser reason:Testing ban delete_messages:1
+   /mod unban user_id:123456789012345678 reason:Testing unban
+   ```
+   - Verify user is banned from server
+   - Check message deletion works (0-7 days)
+   - Test unban with user ID
+   - Verify ban/unban appears in audit log
+
+4. **Warn Command**:
+   ```
+   /mod warn user:@testuser reason:Testing warning system
+   ```
+   - Verify warning embed is displayed
+   - Check DM is sent to user (if possible)
+   - Test with users who have DMs disabled
+
+5. **Slowmode Command**:
+   ```
+   /mod slowmode seconds:30
+   /mod slowmode seconds:0 channel:#test-channel
+   ```
+   - Verify slowmode is applied correctly
+   - Test removal (seconds:0)
+   - Test in different channels
+
+### Role Management Commands
+
+1. **Add Role Command**:
+   ```
+   /mod addrole user:@testuser role:@TestRole reason:Testing role addition
+   ```
+   - Verify role is added to user
+   - Test with various roles at different hierarchy levels
+   - Check role hierarchy enforcement
+   - Test with already assigned roles (should fail)
+
+2. **Remove Role Command**:
+   ```
+   /mod removerole user:@testuser role:@TestRole reason:Testing role removal
+   ```
+   - Verify role is removed from user
+   - Test with roles user doesn't have (should fail)
+   - Check role hierarchy enforcement
+
+### Nickname Management
+
+1. **Change Nickname**:
+   ```
+   /mod nickname user:@testuser nickname:NewTestName reason:Testing nickname change
+   ```
+   - Verify nickname is changed
+   - Test with special characters and unicode
+   - Check Discord nickname length limits
+
+2. **Clear Nickname**:
+   ```
+   /mod nickname user:@testuser reason:Clearing nickname
+   ```
+   - Verify nickname is cleared (empty nickname parameter)
+   - Check user displays original username
+
+### Message Management Commands
+
+1. **Bulk Message Deletion**:
+   ```
+   /mod purgemsg count:10
+   /mod purgemsg count:5 user:@spammer
+   /mod purgemsg count:20 channel:#test-channel
+   ```
+   - Create test messages to delete
+   - Verify correct number of messages deleted
+   - Test user-specific filtering
+   - Test in different channels
+   - Check 14-day bulk delete limitation
+
+2. **Pin/Unpin Messages**:
+   ```
+   /mod pin message_id:123456789012345678
+   /mod unpin message_id:123456789012345678 channel:#test-channel
+   ```
+   - Test pinning existing messages
+   - Verify message becomes pinned
+   - Test unpinning messages
+   - Test with invalid message IDs (should fail)
+
+### Permission and Hierarchy Testing
+
+1. **Role Hierarchy Validation**:
+   - Test with users at same role level (should fail)
+   - Test with users at higher role level (should fail)
+   - Test with users at lower role level (should succeed)
+   - Verify bot's role position affects capabilities
+
+2. **Self-Target Prevention**:
+   - Attempt to target self with various commands
+   - Verify commands fail with appropriate error messages
+   - Test timeout, kick, ban, role changes, nickname changes
+
+3. **Permission Validation**:
+   - Test with users who have moderator roles
+   - Test with users who have Discord permissions but no moderator role
+   - Test with users who have neither
+   - Verify permission checks work correctly
+
+### Auto-Moderation Testing
+
+1. **Spam Detection**:
+   - Configure spam settings (e.g., 5 messages in 10 seconds)
+   - Send messages rapidly exceeding threshold
+   - Verify detection triggers correctly
+   - Test configured action (warn/timeout/kick)
+   - Check exemptions work (exempt roles/channels)
+
+2. **Caps Detection**:
+   - Configure caps threshold (e.g., 70% caps, 10 char minimum)
+   - Send messages with excessive capitals
+   - Verify detection triggers correctly
+   - Test with messages below minimum length
+   - Test configured action (warn/delete/timeout)
+
+3. **Link Detection**:
+   - Configure whitelist (e.g., discord.gg, youtube.com)
+   - Send messages with whitelisted links (should pass)
+   - Send messages with non-whitelisted links (should trigger)
+   - Test various URL formats
+   - Test configured action (warn/delete/timeout)
+
+4. **Profanity Detection**:
+   - Configure custom word list
+   - Send messages containing blocked words
+   - Verify detection triggers correctly
+   - Test partial word matching
+   - Test configured action (warn/delete/timeout)
+
+5. **Exemption Testing**:
+   - Add roles to exempt list
+   - Test auto-mod with exempt role users (should bypass)
+   - Add channels to exempt list
+   - Test auto-mod in exempt channels (should bypass)
+   - Verify manual commands still work in exempt areas
+
+### Configuration Testing
+
+1. **Action Toggle Testing**:
+   - Disable specific actions in web interface
+   - Attempt to use disabled commands
+   - Verify commands fail with appropriate message
+   - Re-enable and verify commands work again
+
+2. **Auto-Moderation Toggle**:
+   - Enable/disable auto-moderation globally
+   - Test individual detection type toggles
+   - Verify settings changes take effect immediately
+   - Test exemption list modifications
+
+3. **Hot-Reload Testing**:
+   - Make configuration changes via web interface
+   - Verify changes take effect without restart
+   - Test with multiple rapid changes
+   - Check configuration persistence
+
+### Logging and Audit Testing
+
+1. **Discord Channel Logging**:
+   - Configure moderation log channel
+   - Perform various moderation actions
+   - Verify detailed logs appear in channel
+   - Check log formatting and emoji usage
+   - Test with missing log channel (should not crash)
+
+2. **File Logging**:
+   - Check bot.log for moderation events
+   - Verify `[MODERATION]` prefix is used
+   - Test log rotation if applicable
+   - Check error logging for failed actions
+
+3. **Audit Trail**:
+   - Verify all actions appear in Discord audit log
+   - Check reasons are properly recorded
+   - Test with actions that support audit log entries
+
+### Error Handling and Edge Cases
+
+1. **Invalid User/Role/Channel IDs**:
+   - Test commands with non-existent users
+   - Test with invalid role IDs
+   - Test with inaccessible channels
+   - Verify appropriate error messages
+
+2. **Missing Permissions**:
+   - Remove bot permissions mid-operation
+   - Test various permission combinations
+   - Verify graceful failure and error reporting
+
+3. **Rate Limiting**:
+   - Perform rapid moderation actions
+   - Verify rate limit compliance
+   - Check automatic retry mechanisms
+
+4. **Large Scale Operations**:
+   - Test bulk message deletion with thousands of messages
+   - Test auto-moderation with high message volume
+   - Monitor performance and memory usage
+
 ## Logging Testing
 
 ### File Logging
@@ -289,6 +516,7 @@ This will validate:
 2. **Plugin-Specific Logging**:
    - Verification events with `[VERIFICATION]` prefix
    - Purge events with `[PURGE]` prefix
+   - Moderation events with `[MODERATION]` prefix
    - Debug information when debug mode enabled
 
 ### Discord Channel Logging
@@ -302,6 +530,12 @@ This will validate:
    - Configure log channel in purge plugin
    - Perform manual and auto purges
    - Check log messages include proper details
+
+3. **Moderation Logging**:
+   - Configure log channel in moderation plugin
+   - Perform various moderation actions
+   - Verify detailed action logs with emojis and metadata
+   - Test auto-moderation event logging
 
 ## Error Handling Testing
 

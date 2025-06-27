@@ -2,6 +2,8 @@
 
 A comprehensive user verification system for Discord servers with configurable screenshot requirements, admin approval workflows, and automated moderation.
 
+> **Note**: This verification plugin was originally forked from [discord-verification-bot](https://github.com/Zachdidit/discord-verification-bot) and has been extensively enhanced and integrated into the modular framework.
+
 ## Features
 
 - **Flexible Screenshot Requirements**: Support for 0, 1, or 2 screenshots based on configuration
