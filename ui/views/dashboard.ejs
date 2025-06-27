@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #1e1e1e; border-bottom: 1px solid #404040;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot"></i> Modular Discord Bot
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item">
+                    <span class="nav-link">
+                        Status: <span id="bot-status" class="badge bg-secondary">Unknown</span>
+                    </span>
+                </div>
+                <% if (user) { %>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" 
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <% if (user.avatar) { %>
+                            <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32" 
+                                 alt="Avatar" class="rounded-circle me-2" width="24" height="24">
+                        <% } else { %>
+                            <i class="fas fa-user-circle me-2"></i>
+                        <% } %>
+                        <%= user.username %><% if (user.discriminator && user.discriminator !== '0') { %>#<%= user.discriminator %><% } %>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="/auth/logout">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cog"></i> Configuration</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action active" data-section="bot">
+                            <i class="fas fa-robot"></i> Bot Settings
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-section="plugins">
+                            <i class="fas fa-puzzle-piece"></i> Plugins
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <button id="save-config" class="btn btn-primary btn-sm w-100 mb-2">
+                            <i class="fas fa-save"></i> Save Configuration
+                        </button>
+                        <button id="restart-bot" class="btn btn-warning btn-sm w-100">
+                            <i class="fas fa-redo"></i> Restart Bot
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <div id="alerts"></div>
+
+                <!-- Bot Configuration Section -->
+                <div id="bot-section" class="config-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-robot"></i> Bot Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="bot-config-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="bot-token" class="form-label">Bot Token *</label>
+                                            <input type="password" class="form-control" id="bot-token" required>
+                                            <div class="form-text">Your Discord bot token</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="client-id" class="form-label">Client ID *</label>
+                                            <input type="text" class="form-control" id="client-id" required>
+                                            <div class="form-text">Your Discord application client ID</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="guild-id" class="form-label">Guild ID *</label>
+                                            <input type="text" class="form-control" id="guild-id" required>
+                                            <div class="form-text">Your Discord server ID</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plugins Configuration Section -->
+                <div id="plugins-section" class="config-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-puzzle-piece"></i> Plugin Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="plugins-container">
+                                <!-- Plugins will be loaded here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

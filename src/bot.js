@@ -96,7 +96,7 @@ class DiscordBot {
                     const pluginPath = path.join(pluginsDir, pluginName, 'index.js');
                     if (fs.existsSync(pluginPath)) {
                         try {
-                            await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this));
+                            await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this), pluginName);
                         } catch (error) {
                             this.log(`Failed to load plugin ${pluginName}: ${error.message}`, 'error');
                         }
@@ -132,6 +132,64 @@ class DiscordBot {
             this.log(`Successfully reloaded ${data.length} application (/) commands.`);
         } catch (error) {
             this.log(`Error deploying commands: ${error.message}`, 'error');
+        }
+    }
+
+    async reloadConfig(newConfig) {
+        this.log('Configuration change detected, reloading affected plugins...');
+        
+        try {
+            const oldConfig = this.config;
+            this.config = newConfig;
+            
+            // Check which plugins need reloading
+            if (newConfig.plugins && oldConfig.plugins) {
+                for (const [pluginName, pluginConfig] of Object.entries(newConfig.plugins)) {
+                    const oldPluginConfig = oldConfig.plugins[pluginName];
+                    
+                    if (pluginConfig.enabled !== false) {
+                        if (!oldPluginConfig) {
+                            // New plugin, load it
+                            const pluginPath = path.join(__dirname, 'plugins', pluginName, 'index.js');
+                            if (fs.existsSync(pluginPath)) {
+                                await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this), pluginName);
+                            }
+                        } else {
+                            // Existing plugin, reload if config changed
+                            await this.pluginManager.reloadPluginConfig(pluginName, pluginConfig);
+                        }
+                    } else if (oldPluginConfig && this.pluginManager.getPlugin(pluginName)) {
+                        // Plugin disabled, unload it
+                        await this.pluginManager.unloadPlugin(pluginName);
+                    }
+                }
+                
+                // Check for removed plugins
+                for (const [pluginName] of Object.entries(oldConfig.plugins)) {
+                    if (!newConfig.plugins[pluginName] && this.pluginManager.getPlugin(pluginName)) {
+                        await this.pluginManager.unloadPlugin(pluginName);
+                    }
+                }
+            }
+            
+            // Redeploy commands if any plugins were reloaded
+            await this.deployCommands();
+            this.log('Configuration reload completed successfully');
+            
+        } catch (error) {
+            this.log(`Error during configuration reload: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    async reloadPlugin(pluginName) {
+        try {
+            await this.pluginManager.reloadPlugin(pluginName);
+            await this.deployCommands();
+            this.log(`Plugin ${pluginName} reloaded successfully`);
+        } catch (error) {
+            this.log(`Failed to reload plugin ${pluginName}: ${error.message}`, 'error');
+            throw error;
         }
     }
 

@@ -9,10 +9,18 @@ class PluginManager {
         this.commands = new Collection();
     }
 
-    async loadPlugin(pluginPath, config = {}, botLogMethod = null) {
+    async loadPlugin(pluginPath, config = {}, botLogMethod = null, pluginName = null) {
         try {
             const PluginClass = require(pluginPath);
             const plugin = new PluginClass(this.client, config);
+            
+            // Store plugin metadata for reloading
+            plugin.pluginPath = pluginPath;
+            plugin.botLogMethod = botLogMethod;
+            
+            // Use provided plugin name or derive from path
+            const actualPluginName = pluginName || path.basename(path.dirname(pluginPath));
+            plugin.pluginName = actualPluginName; // Store the actual plugin name
             
             // Pass bot's log method to plugin if available
             if (botLogMethod) {
@@ -20,13 +28,13 @@ class PluginManager {
             }
             
             await plugin.load();
-            this.plugins.set(plugin.name, plugin);
+            this.plugins.set(actualPluginName, plugin);
             
             plugin.getCommands().forEach(command => {
                 this.commands.set(command.data.name, command);
             });
             
-            console.log(`[PluginManager] Loaded plugin: ${plugin.name}`);
+            console.log(`[PluginManager] Loaded plugin: ${actualPluginName}`);
             return plugin;
         } catch (error) {
             console.error(`[PluginManager] Failed to load plugin at ${pluginPath}:`, error);
@@ -89,18 +97,49 @@ class PluginManager {
         return this.commands;
     }
 
-    async reloadPlugin(pluginName) {
+    async reloadPlugin(pluginName, newConfig = null) {
         const plugin = this.plugins.get(pluginName);
         if (!plugin) {
             throw new Error(`Plugin ${pluginName} not found`);
         }
 
-        const config = plugin.config;
+        console.log(`[PluginManager] Reloading plugin: ${pluginName}`);
+        
+        // Store plugin metadata
+        const pluginPath = plugin.pluginPath;
+        const botLogMethod = plugin.botLogMethod;
+        const config = newConfig || plugin.config;
+        
+        // Unload the plugin
         await this.unloadPlugin(pluginName);
         
-        delete require.cache[require.resolve(plugin.constructor)];
+        // Clear require cache for the plugin module
+        delete require.cache[require.resolve(pluginPath)];
         
-        await this.loadPlugin(plugin.constructor, config);
+        // Reload the plugin with new config and preserve the plugin name
+        const reloadedPlugin = await this.loadPlugin(pluginPath, config, botLogMethod, pluginName);
+        
+        console.log(`[PluginManager] Successfully reloaded plugin: ${pluginName}`);
+        return reloadedPlugin;
+    }
+
+    async reloadPluginConfig(pluginName, newConfig) {
+        const plugin = this.plugins.get(pluginName);
+        if (!plugin) {
+            throw new Error(`Plugin ${pluginName} not found`);
+        }
+
+        // Check if config actually changed
+        const currentConfigStr = JSON.stringify(plugin.config);
+        const newConfigStr = JSON.stringify(newConfig);
+        
+        if (currentConfigStr === newConfigStr) {
+            console.log(`[PluginManager] No config changes detected for ${pluginName}, skipping reload`);
+            return plugin;
+        }
+
+        console.log(`[PluginManager] Config changed for ${pluginName}, reloading...`);
+        return await this.reloadPlugin(pluginName, newConfig);
     }
 }
 

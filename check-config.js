@@ -19,6 +19,21 @@ function checkConfig() {
         console.log(`  Token: ${config.bot?.token ? '✅ Set' : '❌ Missing'}`);
         console.log(`  Client ID: ${config.bot?.clientId ? '✅ Set' : '❌ Missing'}`);
         console.log(`  Guild ID: ${config.bot?.guildId ? '✅ Set' : '❌ Missing'}`);
+        console.log(`  Enable UI: ${config.bot?.enableUI ? '✅ Enabled' : '⚠️ Disabled'}`);
+        console.log(`  UI Port: ${config.bot?.uiPort || '⚠️ Default (3000)'}`);
+        
+        if (config.bot?.uiAuth) {
+            console.log('\n  UI Authentication:');
+            console.log(`    Enabled: ${config.bot.uiAuth.enabled ? '✅ Enabled' : '⚠️ Disabled'}`);
+            if (config.bot.uiAuth.enabled) {
+                console.log(`    Client Secret: ${config.bot.uiAuth.clientSecret && config.bot.uiAuth.clientSecret !== 'your_discord_client_secret_here' ? '✅ Set' : '❌ Missing'}`);
+                console.log(`    Session Secret: ${config.bot.uiAuth.sessionSecret && config.bot.uiAuth.sessionSecret !== 'your_session_secret_here' ? '✅ Set' : '❌ Missing'}`);
+                console.log(`    Allowed Roles: ${config.bot.uiAuth.allowedRoleIds && config.bot.uiAuth.allowedRoleIds.length > 0 ? '✅ Set (' + config.bot.uiAuth.allowedRoleIds.length + ' roles)' : '❌ Missing'}`);
+                console.log(`    Redirect URI: ${config.bot.uiAuth.redirectUri ? '✅ Set' : '❌ Missing'}`);
+            }
+        } else {
+            console.log('\n  ⚠️ UI Authentication not configured (UI will be publicly accessible)');
+        }
         
         if (config.plugins) {
             console.log('\nPlugin Configuration:');
