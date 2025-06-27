@@ -347,15 +347,20 @@ class VerificationPlugin extends Plugin {
                 this.log(`ℹ️ Character name not required for ${member.user.tag} - nickname not updated`);
             }
 
+            // Create approval status embed while preserving original content
             const approvalEmbed = new EmbedBuilder()
                 .setColor(0x00FF00)
-                .setTitle('Verification Approved')
+                .setTitle('✅ APPROVED')
                 .setDescription(`Approved by ${interaction.user}`)
                 .setTimestamp();
 
+            // Preserve original embeds and add approval status
+            const originalEmbeds = [...interaction.message.embeds];
+            const allEmbeds = [...originalEmbeds, approvalEmbed];
+
             await interaction.message.edit({
-                embeds: [approvalEmbed],
-                components: []
+                embeds: allEmbeds,
+                components: [] // Remove buttons only
             });
 
             try {
@@ -369,10 +374,6 @@ class VerificationPlugin extends Plugin {
                 });
             }
 
-            await interaction.reply({
-                content: `Successfully verified ${member}!`,
-                flags: 64
-            });
 
             const logMessage = `✅ ${interaction.user.tag} verified ${member.user.tag} at ${new Date().toLocaleString()}`;
             this.log(logMessage);
@@ -424,16 +425,21 @@ class VerificationPlugin extends Plugin {
         const reason = modalSubmit.fields.getTextInputValue('reason');
         this.deniedUsers.add(userId);
 
+        // Create denial status embed while preserving original content
         const denialEmbed = new EmbedBuilder()
             .setColor(0xFF0000)
-            .setTitle('Verification Denied')
+            .setTitle('❌ DENIED')
             .setDescription(`Denied by ${interaction.user}`)
             .addFields({ name: 'Reason', value: reason })
             .setTimestamp();
 
+        // Preserve original embeds and add denial status
+        const originalEmbeds = [...modalSubmit.message.embeds];
+        const allEmbeds = [...originalEmbeds, denialEmbed];
+
         await modalSubmit.message.edit({
-            embeds: [denialEmbed],
-            components: []
+            embeds: allEmbeds,
+            components: [] // Remove buttons only
         });
 
         let member;
