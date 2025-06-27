@@ -41,7 +41,7 @@ class VerificationPlugin extends Plugin {
         const requiredFields = [
             'verifyChannelId',
             'verifyCommandChannelId',
-            'atreidesRoleId',
+            'verifiedRoleId',
             'verifierRoleIds'
         ];
 
@@ -130,13 +130,13 @@ class VerificationPlugin extends Plugin {
         try {
             await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
-            if (!this.flatConfig.atreidesRoleId) {
+            if (!this.flatConfig.verifiedRoleId) {
                 return await interaction.editReply({
                     content: 'Verification system is not properly configured. Please contact an administrator.'
                 });
             }
 
-            const hasRole = interaction.member.roles.cache.has(this.flatConfig.atreidesRoleId);
+            const hasRole = interaction.member.roles.cache.has(this.flatConfig.verifiedRoleId);
             if (hasRole) {
                 return await interaction.editReply({
                     content: 'You are already verified! No need to submit again.'
@@ -331,7 +331,7 @@ class VerificationPlugin extends Plugin {
             const characterNameField = interaction.message.embeds[0].fields.find(f => f.name === 'Character Name');
             const characterName = characterNameField ? characterNameField.value : null;
 
-            await member.roles.add(this.flatConfig.atreidesRoleId);
+            await member.roles.add(this.flatConfig.verifiedRoleId);
             
             // Only attempt nickname update if character name is required and provided
             if (this.flatConfig.requireCharacterName && characterName && characterName !== 'Not provided') {

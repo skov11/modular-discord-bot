@@ -35,7 +35,7 @@ function checkConfig() {
                 console.log(`      How To Verify Channel ID: ${verif.channels?.howToVerifyID ? '✅ Set' : '⚠️ Optional - Not set'}`);
                 
                 console.log('\n    Roles:');
-                console.log(`      Atreides Role ID: ${verif.roles?.atreidesRoleId ? '✅ Set' : '❌ Missing'}`);
+                console.log(`      Verified Role ID: ${verif.roles?.verifiedRoleId ? '✅ Set' : '❌ Missing'}`);
                 console.log(`      Verifier Role IDs: ${verif.roles?.verifierRoleIds && verif.roles.verifierRoleIds.length > 0 ? '✅ Set' : '❌ Missing'}`);
                 
                 console.log('\n    Messages:');

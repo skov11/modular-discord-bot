@@ -15,7 +15,7 @@
         "howToVerifyID": "INSTRUCTIONS_CHANNEL_ID"
       },
       "roles": {
-        "atreidesRoleId": "VERIFIED_ROLE_ID",
+        "verifiedRoleId": "VERIFIED_ROLE_ID",
         "verifierRoleIds": [
           "ADMIN_ROLE_ID_1", 
           "ADMIN_ROLE_ID_2"

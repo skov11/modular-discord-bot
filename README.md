@@ -132,7 +132,7 @@ Edit the configuration with your values:
         "howToVerifyID": "channel_with_verification_instructions"
       },
       "roles": {
-        "atreidesRoleId": "role_to_assign_verified_users",
+        "verifiedRoleId": "role_to_assign_verified_users",
         "verifierRoleIds": ["admin_role_id_1", "admin_role_id_2"]
       },
       "messages": {
