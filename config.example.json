@@ -26,7 +26,10 @@
         "denialMessagePrefix": "❌ Your verification has been denied."
       },
       "settings": {
-        "debugMode": false
+        "debugMode": false,
+        "screenshotCount": 2,
+        "requireCharacterName": true,
+        "requireGuildName": true
       }
     }
   }

@@ -44,6 +44,9 @@ function checkConfig() {
                 
                 console.log('\n    Settings:');
                 console.log(`      Debug Mode: ${verif.settings?.debugMode ? '⚠️ Enabled' : '✅ Disabled'}`);
+                console.log(`      Screenshot Count: ${verif.settings?.screenshotCount ?? '⚠️ Not set (defaults to 0)'}`);
+                console.log(`      Require Character Name: ${verif.settings?.requireCharacterName !== false ? '✅ Yes' : '❌ No'}`);
+                console.log(`      Require Guild Name: ${verif.settings?.requireGuildName !== false ? '✅ Yes' : '❌ No'}`);
             } else {
                 console.log('\n  ❌ Verification plugin configuration not found');
             }

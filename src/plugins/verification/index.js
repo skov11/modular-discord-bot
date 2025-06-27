@@ -60,6 +60,15 @@ class VerificationPlugin extends Plugin {
         if (this.flatConfig.verifierRoleIds && !Array.isArray(this.flatConfig.verifierRoleIds)) {
             this.log('WARNING: verifierRoleIds should be an array', 'warn');
         }
+
+        // Validate screenshot count
+        const screenshotCount = this.flatConfig.screenshotCount;
+        if (screenshotCount !== undefined && (screenshotCount < 0 || screenshotCount > 2)) {
+            this.log('WARNING: screenshotCount should be 0, 1, or 2. Defaulting to 0.', 'warn');
+        }
+
+        // Log configuration summary
+        this.log(`Configuration: screenshots=${screenshotCount || 0}, character=${this.flatConfig.requireCharacterName}, guild=${this.flatConfig.requireGuildName}`, 'info');
     }
 
     async unload() {
@@ -67,26 +76,45 @@ class VerificationPlugin extends Plugin {
     }
 
     registerVerifyCommand() {
+        const commandBuilder = new SlashCommandBuilder()
+            .setName('verify')
+            .setDescription('Verify your account');
+
+        // Add character name option if required
+        if (this.flatConfig.requireCharacterName) {
+            commandBuilder.addStringOption(option =>
+                option.setName('character')
+                    .setDescription('Your in-game character name')
+                    .setRequired(true));
+        }
+
+        // Add guild name option if required
+        if (this.flatConfig.requireGuildName) {
+            commandBuilder.addStringOption(option =>
+                option.setName('guild')
+                    .setDescription('Your in-game guild name')
+                    .setRequired(true));
+        }
+
+        // Add screenshot options based on count setting
+        const screenshotCount = this.flatConfig.screenshotCount || 0;
+        
+        if (screenshotCount >= 1) {
+            commandBuilder.addAttachmentOption(option =>
+                option.setName('screenshot1')
+                    .setDescription('First verification screenshot')
+                    .setRequired(true));
+        }
+
+        if (screenshotCount >= 2) {
+            commandBuilder.addAttachmentOption(option =>
+                option.setName('screenshot2')
+                    .setDescription('Second verification screenshot')
+                    .setRequired(true));
+        }
+
         const command = {
-            data: new SlashCommandBuilder()
-                .setName('verify')
-                .setDescription('Verify your account with screenshots')
-                .addStringOption(option =>
-                    option.setName('character')
-                        .setDescription('Your in-game character name')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('guild')
-                        .setDescription('Your in-game guild name')
-                        .setRequired(true))
-                .addAttachmentOption(option =>
-                    option.setName('screenshot1')
-                        .setDescription('First verification screenshot')
-                        .setRequired(true))
-                .addAttachmentOption(option =>
-                    option.setName('screenshot2')
-                        .setDescription('Second verification screenshot')
-                        .setRequired(true)),
+            data: commandBuilder,
             execute: async (interaction) => this.handleVerifyCommand(interaction)
         };
 
@@ -121,21 +149,40 @@ class VerificationPlugin extends Plugin {
                 this.log(`Removed ${interaction.user.tag} from denied users list - allowing resubmission`, 'debug');
             }
 
-            const characterName = interaction.options.getString('character');
-            const guildName = interaction.options.getString('guild');
-            const screenshot1 = interaction.options.getAttachment('screenshot1');
-            const screenshot2 = interaction.options.getAttachment('screenshot2');
+            // Get character and guild names if required
+            const characterName = this.flatConfig.requireCharacterName ? 
+                interaction.options.getString('character') : 'Not provided';
+            const guildName = this.flatConfig.requireGuildName ? 
+                interaction.options.getString('guild') : 'Not provided';
 
-            const validFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
-            const isValidFormat = (attachment) => {
-                const extension = attachment.name.split('.').pop().toLowerCase();
-                return validFormats.includes(extension);
-            };
+            // Get screenshots based on configuration
+            const screenshotCount = this.flatConfig.screenshotCount || 0;
+            const screenshots = [];
+            
+            if (screenshotCount >= 1) {
+                const screenshot1 = interaction.options.getAttachment('screenshot1');
+                if (screenshot1) screenshots.push(screenshot1);
+            }
+            
+            if (screenshotCount >= 2) {
+                const screenshot2 = interaction.options.getAttachment('screenshot2');
+                if (screenshot2) screenshots.push(screenshot2);
+            }
 
-            if (!isValidFormat(screenshot1) || !isValidFormat(screenshot2)) {
-                return await interaction.editReply({
-                    content: 'Please upload valid image files (PNG, JPG, GIF, or WebP format).'
-                });
+            // Validate screenshot formats if any are provided
+            if (screenshots.length > 0) {
+                const validFormats = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+                const isValidFormat = (attachment) => {
+                    const extension = attachment.name.split('.').pop().toLowerCase();
+                    return validFormats.includes(extension);
+                };
+
+                const invalidScreenshots = screenshots.filter(screenshot => !isValidFormat(screenshot));
+                if (invalidScreenshots.length > 0) {
+                    return await interaction.editReply({
+                        content: 'Please upload valid image files (PNG, JPG, GIF, or WebP format).'
+                    });
+                }
             }
 
             if (!this.flatConfig.verifyChannelId) {
@@ -156,21 +203,43 @@ class VerificationPlugin extends Plugin {
                 });
             }
             
-            const embed1 = new EmbedBuilder()
+            // Create embeds based on screenshots
+            const embeds = [];
+            
+            // Main embed with user info and first screenshot (if any)
+            const mainEmbed = new EmbedBuilder()
                 .setColor(0x0099FF)
-                .setTitle('Verification Request - Screenshot 1')
+                .setTitle(screenshots.length > 0 ? 'Verification Request - Screenshot 1' : 'Verification Request')
                 .addFields(
-                    { name: 'User', value: `${interaction.user} (${interaction.user.tag})`, inline: true },
-                    { name: 'Character Name', value: characterName, inline: true },
-                    { name: 'Guild', value: guildName, inline: true }
+                    { name: 'User', value: `${interaction.user} (${interaction.user.tag})`, inline: true }
                 )
-                .setImage(screenshot1.url)
                 .setTimestamp();
 
-            const embed2 = new EmbedBuilder()
-                .setColor(0x0099FF)
-                .setTitle('Verification Request - Screenshot 2')
-                .setImage(screenshot2.url);
+            // Add character name field if configured
+            if (this.flatConfig.requireCharacterName) {
+                mainEmbed.addFields({ name: 'Character Name', value: characterName, inline: true });
+            }
+
+            // Add guild name field if configured
+            if (this.flatConfig.requireGuildName) {
+                mainEmbed.addFields({ name: 'Guild', value: guildName, inline: true });
+            }
+
+            // Add first screenshot if provided
+            if (screenshots.length >= 1) {
+                mainEmbed.setImage(screenshots[0].url);
+            }
+
+            embeds.push(mainEmbed);
+
+            // Add second screenshot embed if provided
+            if (screenshots.length >= 2) {
+                const secondEmbed = new EmbedBuilder()
+                    .setColor(0x0099FF)
+                    .setTitle('Verification Request - Screenshot 2')
+                    .setImage(screenshots[1].url);
+                embeds.push(secondEmbed);
+            }
 
             const row = new ActionRowBuilder()
                 .addComponents(
@@ -185,7 +254,7 @@ class VerificationPlugin extends Plugin {
                 );
 
             await verifyChannel.send({
-                embeds: [embed1, embed2],
+                embeds: embeds,
                 components: [row]
             });
 
@@ -193,7 +262,12 @@ class VerificationPlugin extends Plugin {
                 content: 'Your verification request has been submitted! You will receive a DM when it has been reviewed.'
             });
 
-            this.log(`Verification request submitted by ${interaction.user.tag} (${interaction.user.id}) - Character: ${characterName}, Guild: ${guildName}`, 'debug');
+            const logDetails = [];
+            if (this.flatConfig.requireCharacterName) logDetails.push(`Character: ${characterName}`);
+            if (this.flatConfig.requireGuildName) logDetails.push(`Guild: ${guildName}`);
+            logDetails.push(`Screenshots: ${screenshots.length}`);
+            
+            this.log(`Verification request submitted by ${interaction.user.tag} (${interaction.user.id}) - ${logDetails.join(', ')}`, 'debug');
 
         } catch (error) {
             this.log(`Error in verify command: ${error}`, 'error');
@@ -254,19 +328,23 @@ class VerificationPlugin extends Plugin {
             }
 
             const member = await interaction.guild.members.fetch(userId);
-            const characterName = interaction.message.embeds[0].fields.find(f => f.name === 'Character Name')?.value;
+            const characterNameField = interaction.message.embeds[0].fields.find(f => f.name === 'Character Name');
+            const characterName = characterNameField ? characterNameField.value : null;
 
             await member.roles.add(this.flatConfig.atreidesRoleId);
             
-            if (characterName) {
+            // Only attempt nickname update if character name is required and provided
+            if (this.flatConfig.requireCharacterName && characterName && characterName !== 'Not provided') {
                 try {
                     await member.setNickname(characterName);
                     this.log(`📝 Updated nickname for ${member.user.tag} to "${characterName}"`);
                 } catch (nicknameError) {
                     this.log(`❌ Failed to update nickname for ${member.user.tag} to "${characterName}": ${nicknameError.message}`);
                 }
-            } else {
+            } else if (this.flatConfig.requireCharacterName) {
                 this.log(`⚠️ Could not extract character name for ${member.user.tag} - nickname not updated`);
+            } else {
+                this.log(`ℹ️ Character name not required for ${member.user.tag} - nickname not updated`);
             }
 
             const approvalEmbed = new EmbedBuilder()

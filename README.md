@@ -17,7 +17,8 @@ A flexible, plugin-based Discord bot framework built with Discord.js v14+. Featu
 
 #### Verification Plugin
 
-- **Dual Screenshot Verification**: `/verify` command requires 2 screenshots with character name and guild name parameters
+- **Configurable Screenshot Requirements**: Support for 0, 1, or 2 screenshots based on configuration
+- **Optional Character/Guild Names**: Configure whether character and guild names are required or optional
 - **Image Validation**: Automatic validation to ensure both uploads are valid image files (PNG, JPG, GIF, WebP)
 - **Enhanced Display System**: Dual-embed display showing both screenshots clearly in verification channels
 - **Admin Approval System**: Sends verification requests to designated channels with "Approve Verification" and "Deny Verification" buttons
@@ -139,7 +140,10 @@ Edit the configuration with your values:
         "denialMessagePrefix": "❌ Your verification has been denied."
       },
       "settings": {
-        "debugMode": true
+        "debugMode": true,
+        "screenshotCount": 2,
+        "requireCharacterName": true,
+        "requireGuildName": true
       }
     }
   }
@@ -155,6 +159,44 @@ node check-config.js
 ```
 
 This will validate all required settings and provide helpful feedback about any missing or incorrect values.
+
+#### Verification Plugin Configuration Options
+
+The verification plugin supports flexible configuration to adapt to different server needs:
+
+**Screenshot Requirements** (`screenshotCount`):
+- `0` - No screenshots required (text-only verification)
+- `1` - Single screenshot required
+- `2` - Dual screenshots required (default)
+
+**Field Requirements**:
+- `requireCharacterName` - Whether character name is required (default: `true`)
+- `requireGuildName` - Whether guild name is required (default: `true`)
+
+**Example configurations:**
+
+```json
+// Gaming server with full verification
+"settings": {
+  "screenshotCount": 2,
+  "requireCharacterName": true,
+  "requireGuildName": true
+}
+
+// Simple verification with minimal requirements
+"settings": {
+  "screenshotCount": 0,
+  "requireCharacterName": false,
+  "requireGuildName": false
+}
+
+// Single screenshot with character name only
+"settings": {
+  "screenshotCount": 1,
+  "requireCharacterName": true,
+  "requireGuildName": false
+}
+```
 
 ### Step 5: Start the Bot
 
