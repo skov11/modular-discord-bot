@@ -405,7 +405,7 @@ This tool will:
 
 ## 🔌 Plugin Development
 
-This modular bot framework is designed for easy plugin development. Create custom plugins to add any Discord bot functionality you need. See [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md) for detailed documentation on creating custom plugins.
+This modular bot framework is designed for easy plugin development. Create custom plugins to add any Discord bot functionality you need.
 
 ### Quick Plugin Example
 
