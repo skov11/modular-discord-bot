@@ -5,6 +5,7 @@
     "guildId": "YOUR_GUILD_ID",
     "enableUI": true,
     "uiPort": 3000,
+    "debugMode": false,
     "uiAuth": {
       "enabled": false,
       "clientSecret": "your_discord_client_secret_here",

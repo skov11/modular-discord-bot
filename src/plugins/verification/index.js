@@ -739,7 +739,7 @@ class VerificationPlugin extends Plugin {
         // Log to bot's main log file if available
         if (this.botLog) {
             // Always log to file, except for debug messages when debug mode is disabled
-            if (type === 'debug' && !this.flatConfig.debugMode) {
+            if (type === 'debug' && !this.botConfig?.debugMode) {
                 return; // Don't log debug messages to file when debug mode is off
             }
             

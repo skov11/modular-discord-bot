@@ -30,6 +30,11 @@ class DiscordBot {
     }
 
     log(message, type = 'info') {
+        // Skip debug messages if debug mode is disabled
+        if (type === 'debug' && !this.config.bot?.debugMode) {
+            return;
+        }
+        
         const timestamp = new Date().toISOString();
         const logMessage = `[${timestamp}] [BOT] [${type.toUpperCase()}] ${message}`;
         console.log(logMessage);
@@ -96,7 +101,7 @@ class DiscordBot {
                     const pluginPath = path.join(pluginsDir, pluginName, 'index.js');
                     if (fs.existsSync(pluginPath)) {
                         try {
-                            await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this), pluginName);
+                            await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this), pluginName, this.config.bot);
                         } catch (error) {
                             this.log(`Failed to load plugin ${pluginName}: ${error.message}`, 'error');
                         }
@@ -152,7 +157,7 @@ class DiscordBot {
                             // New plugin, load it
                             const pluginPath = path.join(__dirname, 'plugins', pluginName, 'index.js');
                             if (fs.existsSync(pluginPath)) {
-                                await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this), pluginName);
+                                await this.pluginManager.loadPlugin(pluginPath, pluginConfig, this.log.bind(this), pluginName, newConfig.bot);
                             }
                         } else {
                             // Existing plugin, reload if config changed
