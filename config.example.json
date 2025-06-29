@@ -41,7 +41,14 @@
         "debugMode": false,
         "screenshotCount": 2,
         "requireCharacterName": true,
-        "requireGuildName": true
+        "requireGuildName": true,
+        "autoKick": {
+          "enabled": false,
+          "time": 24,
+          "unit": "hours",
+          "subjectRoles": [],
+          "exemptRoles": []
+        }
       }
     },
 
