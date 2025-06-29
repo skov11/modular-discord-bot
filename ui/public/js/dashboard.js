@@ -671,6 +671,7 @@ class BotDashboard {
         document.getElementById('client-id').value = this.config.bot?.clientId || '';
         document.getElementById('guild-id').value = this.config.bot?.guildId || '';
         document.getElementById('ui-port').value = this.config.bot?.uiPort || 3000;
+        document.getElementById('debug-mode-bot').checked = this.config.bot?.debugMode || false;
         
         // OAuth configuration
         const oauthEnabled = this.config.bot?.uiAuth?.enabled || false;
@@ -849,11 +850,6 @@ class BotDashboard {
                             label: 'Require Guild Name',
                             checked: config.settings?.requireGuildName !== false,
                             className: 'mb-3'
-                        })}
-                        ${this.createCheckboxInput({
-                            id: 'debug-mode',
-                            label: 'Debug Mode',
-                            checked: config.settings?.debugMode
                         })}
                     </div>
                 </div>
@@ -1606,6 +1602,7 @@ class BotDashboard {
         this.config.bot.clientId = document.getElementById('client-id').value;
         this.config.bot.guildId = document.getElementById('guild-id').value;
         this.config.bot.uiPort = parseInt(document.getElementById('ui-port').value) || 3000;
+        this.config.bot.debugMode = document.getElementById('debug-mode-bot').checked;
         
         // Update OAuth settings
         if (!this.config.bot.uiAuth) {
@@ -1665,7 +1662,6 @@ class BotDashboard {
             if (!this.config.plugins.verification.settings) {
                 this.config.plugins.verification.settings = {};
             }
-            this.config.plugins.verification.settings.debugMode = document.getElementById('debug-mode')?.checked || false;
             this.config.plugins.verification.settings.screenshotCount = parseInt(document.getElementById('screenshot-count')?.value);
             this.config.plugins.verification.settings.requireCharacterName = document.getElementById('require-character-name')?.checked !== false;
             this.config.plugins.verification.settings.requireGuildName = document.getElementById('require-guild-name')?.checked !== false;

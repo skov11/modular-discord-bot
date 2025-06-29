@@ -26,6 +26,11 @@ class Plugin {
     }
 
     log(message, type = 'info') {
+        // Skip debug messages if debug mode is disabled
+        if (type === 'debug' && !this.botConfig?.debugMode) {
+            return;
+        }
+        
         const timestamp = new Date().toISOString();
         console.log(`[${timestamp}] [${this.name}] [${type.toUpperCase()}] ${message}`);
     }
