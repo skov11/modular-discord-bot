@@ -92,6 +92,9 @@ class BotDashboard {
         
         // Setup moderation logs event listeners
         this.setupModerationLogsEventListeners();
+        
+        // Setup OAuth event listeners
+        this.setupOAuthEventListeners();
     }
     
     setupFormChangeDetection() {
@@ -665,12 +668,24 @@ class BotDashboard {
         document.getElementById('bot-token').value = this.config.bot?.token || '';
         document.getElementById('client-id').value = this.config.bot?.clientId || '';
         document.getElementById('guild-id').value = this.config.bot?.guildId || '';
+        document.getElementById('ui-port').value = this.config.bot?.uiPort || 3000;
+        
+        // OAuth configuration
+        const oauthEnabled = this.config.bot?.uiAuth?.enabled || false;
+        document.getElementById('oauth-enabled').checked = oauthEnabled;
+        document.getElementById('client-secret').value = this.config.bot?.uiAuth?.clientSecret || '';
+        document.getElementById('session-secret').value = this.config.bot?.uiAuth?.sessionSecret || '';
+        document.getElementById('redirect-uri').value = this.config.bot?.uiAuth?.redirectUri || 'http://localhost:3000/auth/discord/callback';
+        
+        // Show/hide OAuth settings
+        document.getElementById('oauth-settings').style.display = oauthEnabled ? 'block' : 'none';
         
         // Re-render plugin configuration
         this.renderPluginConfiguration();
         
         // Update all multi-select dropdowns display after render
         setTimeout(() => {
+            this.renderOAuthAllowedRolesDropdown();
             this.updateVerifierRolesSelection();
             this.updateModeratorRolesSelection();
             this.updateExemptRolesSelection();
@@ -1588,6 +1603,21 @@ class BotDashboard {
         this.config.bot.token = document.getElementById('bot-token').value;
         this.config.bot.clientId = document.getElementById('client-id').value;
         this.config.bot.guildId = document.getElementById('guild-id').value;
+        this.config.bot.uiPort = parseInt(document.getElementById('ui-port').value) || 3000;
+        
+        // Update OAuth settings
+        if (!this.config.bot.uiAuth) {
+            this.config.bot.uiAuth = {};
+        }
+        this.config.bot.uiAuth.enabled = document.getElementById('oauth-enabled')?.checked || false;
+        this.config.bot.uiAuth.clientSecret = document.getElementById('client-secret')?.value || '';
+        this.config.bot.uiAuth.sessionSecret = document.getElementById('session-secret')?.value || '';
+        this.config.bot.uiAuth.redirectUri = document.getElementById('redirect-uri')?.value || 'http://localhost:3000/auth/discord/callback';
+        
+        // Get selected OAuth allowed roles
+        this.config.bot.uiAuth.allowedRoleIds = 
+            Array.from(document.querySelectorAll('.oauth-allowed-role-checkbox:checked'))
+                .map(cb => cb.value);
         
         // Update plugin configurations
         if (!this.config.plugins) this.config.plugins = {};
@@ -2731,6 +2761,71 @@ class BotDashboard {
                 ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
             </div>
         `;
+    }
+
+    setupOAuthEventListeners() {
+        // OAuth enabled toggle
+        document.getElementById('oauth-enabled').addEventListener('change', (e) => {
+            const oauthSettings = document.getElementById('oauth-settings');
+            oauthSettings.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // OAuth allowed roles dropdown
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('.oauth-allowed-role-checkbox')) {
+                this.updateOAuthAllowedRolesSelection();
+            }
+        });
+    }
+
+    updateOAuthAllowedRolesSelection() {
+        const checkboxes = document.querySelectorAll('.oauth-allowed-role-checkbox:checked');
+        const selectedRoles = Array.from(checkboxes).map(cb => cb.value);
+        const selectedRoleNames = Array.from(checkboxes).map(cb => {
+            const role = this.availableRoles.find(r => r.id === cb.value);
+            return role ? role.name : cb.value;
+        });
+        
+        // Update the display text
+        const textElement = document.getElementById('oauth-allowed-roles-text');
+        if (selectedRoles.length === 0) {
+            textElement.textContent = 'Select roles...';
+        } else if (selectedRoles.length === 1) {
+            textElement.textContent = selectedRoleNames[0];
+        } else {
+            textElement.textContent = `${selectedRoles.length} roles selected`;
+        }
+        
+        // Update hidden select
+        const hiddenSelect = document.getElementById('oauth-allowed-roles');
+        hiddenSelect.innerHTML = selectedRoles.map(roleId => 
+            `<option value="${roleId}" selected></option>`
+        ).join('');
+        
+        // Trigger form change
+        hiddenSelect.dispatchEvent(new Event('change'));
+    }
+
+    renderOAuthAllowedRolesDropdown() {
+        const container = document.getElementById('oauth-allowed-roles-menu');
+        if (!container) return;
+
+        const allowedRoles = this.config.bot?.uiAuth?.allowedRoleIds || [];
+        
+        container.innerHTML = this.availableRoles.map(role => 
+            `<div class="form-check">
+                <input class="form-check-input oauth-allowed-role-checkbox" type="checkbox" 
+                       value="${role.id}" id="oauth-allowed-role-${role.id}"
+                       ${allowedRoles.includes(role.id) ? 'checked' : ''}>
+                <label class="form-check-label d-flex align-items-center" for="oauth-allowed-role-${role.id}">
+                    <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                    ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                </label>
+            </div>`
+        ).join('');
+        
+        this.updateOAuthAllowedRolesSelection();
     }
 }
 
