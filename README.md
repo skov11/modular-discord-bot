@@ -97,8 +97,10 @@ npm install -g pm2
 pm2 start index.js --name discord-bot
 ```
 
-4. **Access Web Interface**:
-   Navigate to `http://localhost:3000` (or your configured port)
+4. **Configure Plugins via Web Interface**:
+   - Navigate to `http://localhost:3000` (or your configured port)
+   - Enable and configure plugins through the intuitive web dashboard
+   - All settings are saved automatically and take effect immediately
 
 ### Discord Bot Setup
 
@@ -119,55 +121,44 @@ pm2 start index.js --name discord-bot
 
 ## 📋 Configuration
 
-### Basic Configuration
+### Bot Configuration (config.json)
+
+Only the bot configuration is required in `config.json`. All plugin settings are configured through the web interface:
 
 ```json
 {
   "bot": {
     "token": "YOUR_BOT_TOKEN",
-    "clientId": "YOUR_CLIENT_ID",
+    "clientId": "YOUR_CLIENT_ID", 
     "guildId": "YOUR_GUILD_ID",
     "enableUI": true,
-    "uiPort": 3000
-  },
-  "plugins": {
-    "verification": {
-      "enabled": true,
-      "channels": {
-        "verifyChannelId": "ADMIN_VERIFICATION_CHANNEL_ID",
-        "verifyCommandChannelId": "USER_COMMAND_CHANNEL_ID"
-      },
-      "roles": {
-        "verifiedRoleId": "VERIFIED_ROLE_ID",
-        "verifierRoleIds": ["ADMIN_ROLE_ID"]
-      }
-    },
-    "purge": {
-      "enabled": true,
-      "logging": {
-        "channelId": "LOG_CHANNEL_ID"
-      }
-    },
-    "moderation": {
-      "enabled": true,
-      "logging": {
-        "channelId": "MODERATION_LOG_CHANNEL_ID"
-      },
-      "roles": {
-        "moderatorRoleIds": ["MODERATOR_ROLE_ID"]
-      }
+    "uiPort": 3000,
+    "uiAuth": {
+      "enabled": false,
+      "clientSecret": "your_discord_client_secret_here",
+      "sessionSecret": "your_session_secret_here",
+      "allowedRoleIds": ["ADMIN_ROLE_ID"],
+      "redirectUri": "http://localhost:3000/auth/discord/callback"
     }
   }
 }
 ```
 
-### Advanced Configuration
+### Plugin Configuration
 
-For detailed configuration options, see:
+**All plugin settings are configured through the web interface at `http://localhost:3000`:**
 
-- [Verification Plugin Configuration](docs/VERIFICATION_PLUGIN.md#configuration)
-- [Purge Plugin Configuration](docs/PURGE_PLUGIN.md#configuration)
-- [Moderation Plugin Configuration](docs/MODERATION_PLUGIN.md#configuration)
+- **Enable/Disable Plugins**: Toggle plugins on/off with instant effect
+- **Visual Channel Selection**: Choose channels from organized dropdowns
+- **Role Management**: Select roles with visual color indicators
+- **Real-time Updates**: Changes save automatically and take effect immediately
+- **No Manual JSON Editing**: Intuitive forms replace complex JSON configuration
+
+For detailed plugin documentation, see:
+
+- [Verification Plugin Guide](docs/VERIFICATION_PLUGIN.md)
+- [Purge Plugin Guide](docs/PURGE_PLUGIN.md)
+- [Moderation Plugin Guide](docs/MODERATION_PLUGIN.md)
 
 ## 🌐 Web Interface
 
@@ -181,6 +172,8 @@ The bot includes a comprehensive web-based management interface:
 - **Command Reference**: Plugin headers display associated slash commands
 - **Change Tracking**: Save button activates only when changes are made
 - **Hot-Reload**: Plugins reload automatically without bot restart
+- **Shared Components**: Modern UI with consistent form elements and interactions
+- **Dark Theme**: Professional appearance with responsive design
 
 ### Authentication (Optional)
 
@@ -262,6 +255,14 @@ node check-config.js        # Validate configuration
 ```
 
 ## 🆕 Recent Updates
+
+### Version 7.0 - Streamlined Setup & UI Components
+
+- **Simplified Configuration**: Only bot settings required in config.json, all plugins configured via UI
+- **Shared UI Components**: Massive code reduction with reusable form elements
+- **Enhanced User Experience**: Consistent interactions across all plugin settings
+- **Improved Maintainability**: 95% reduction in repetitive UI code
+- **Auto-Kick Feature**: Advanced user verification enforcement with role-based exemptions
 
 ### Version 6.0 - Advanced Moderation System
 
