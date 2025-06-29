@@ -514,8 +514,10 @@ class BotDashboard {
     }
     
     setupWebSocket() {
-        const wsPort = parseInt(window.location.port) + 1 || 3001;
-        const wsUrl = `ws://${window.location.hostname}:${wsPort}`;
+        // Use the same port as the web interface for WebSocket connection
+        const currentPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.hostname}:${currentPort}`;
         
         try {
             this.websocket = new WebSocket(wsUrl);

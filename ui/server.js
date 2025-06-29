@@ -77,7 +77,12 @@ class UIServer {
     }
 
     setupWebSocket() {
-        this.wss = new WebSocket.Server({ port: this.port + 1 });
+        // WebSocket will be attached to the same HTTP server
+        this.wss = null; // Initialize later after HTTP server is created
+    }
+    
+    attachWebSocketToServer(server) {
+        this.wss = new WebSocket.Server({ server });
         
         this.wss.on('connection', (ws) => {
             console.log('WebSocket client connected');
@@ -148,10 +153,13 @@ class UIServer {
     }
 
     start() {
-        this.app.listen(this.port, () => {
+        const server = this.app.listen(this.port, () => {
             console.log(`UI Server running on http://localhost:${this.port}`);
-            console.log(`WebSocket server running on ws://localhost:${this.port + 1}`);
+            console.log(`WebSocket server running on ws://localhost:${this.port}`);
         });
+        
+        // Attach WebSocket server to the same HTTP server
+        this.attachWebSocketToServer(server);
     }
 }
 

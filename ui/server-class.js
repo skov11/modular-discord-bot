@@ -298,15 +298,18 @@ class UIServer {
     }
 
     setupWebSocket() {
-        this.wss = new WebSocket.Server({ port: this.port + 1 });
-        
-        this.wss.on('connection', (ws) => {
-            console.log(`[UI] WebSocket client connected`);
+        // WebSocket will be attached to the same HTTP server
+        if (this.server) {
+            this.wss = new WebSocket.Server({ server: this.server });
             
-            ws.on('close', () => {
-                console.log(`[UI] WebSocket client disconnected`);
+            this.wss.on('connection', (ws) => {
+                console.log(`[UI] WebSocket client connected`);
+                
+                ws.on('close', () => {
+                    console.log(`[UI] WebSocket client disconnected`);
+                });
             });
-        });
+        }
     }
 
     saveConfig(config) {
@@ -385,7 +388,7 @@ class UIServer {
                 this.server = this.app.listen(this.port, () => {
                     console.log(`[UI] Web interface running on http://localhost:${this.port}`);
                     this.setupWebSocket();
-                    console.log(`[UI] WebSocket server running on ws://localhost:${this.port + 1}`);
+                    console.log(`[UI] WebSocket server running on ws://localhost:${this.port}`);
                     resolve();
                 });
             } catch (error) {
