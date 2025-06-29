@@ -102,14 +102,15 @@ class PurgePlugin extends Plugin {
             });
 
             // Log the action
-            this.log(`Manual purge: ${deletedCount} messages deleted from ${targetChannel.name} by ${interaction.user.tag}. Reason: ${reason}`);
+            const moderatorName = interaction.member?.displayName || interaction.user.username;
+            this.log(`Manual purge: ${deletedCount} messages deleted from ${targetChannel.name} by ${moderatorName}. Reason: ${reason}`);
 
             // Log to Discord if configured
             if (this.config.logging?.channelId) {
                 await this.logToDiscord(`🗑️ **Manual Purge**\n` +
                     `**Channel:** ${targetChannel}\n` +
                     `**Messages Deleted:** ${deletedCount}\n` +
-                    `**Moderator:** ${interaction.user}\n` +
+                    `**Moderator:** ${moderatorName}\n` +
                     `**Reason:** ${reason}`);
             }
 

@@ -247,6 +247,33 @@ class UIServer {
                 res.status(500).json({ error: 'Failed to fetch channels', details: error.message });
             }
         });
+
+        this.app.get('/api/moderation/logs', requireAuth, async (req, res) => {
+            try {
+                if (this.botInstance && this.botInstance.pluginManager) {
+                    const moderationPlugin = this.botInstance.pluginManager.plugins.get('moderation');
+                    
+                    if (moderationPlugin && typeof moderationPlugin.getServerModerationLog === 'function') {
+                        const filters = {
+                            userId: req.query.userId,
+                            action: req.query.action,
+                            moderator: req.query.moderator,
+                            hours: req.query.hours ? parseInt(req.query.hours) : undefined
+                        };
+
+                        const logs = moderationPlugin.getServerModerationLog(filters);
+                        res.json({ success: true, logs });
+                    } else {
+                        res.json({ success: false, logs: [], message: 'Moderation plugin not available' });
+                    }
+                } else {
+                    res.status(503).json({ error: 'Bot instance not available' });
+                }
+            } catch (error) {
+                console.error('[UI] Error fetching moderation logs:', error);
+                res.status(500).json({ error: 'Failed to fetch moderation logs', details: error.message });
+            }
+        });
         
         this.app.post('/api/plugins/:pluginName/reload', requireAuth, async (req, res) => {
             try {

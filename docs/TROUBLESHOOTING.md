@@ -194,6 +194,178 @@ This guide covers common issues and solutions for the Modular Discord Bot framew
 - Review auto-purge schedules for overlapping operations
 - Check for network latency issues with Discord API
 
+## Moderation Plugin Issues
+
+### Commands not working
+
+**Commands appear disabled or not responding:**
+- Verify the moderation plugin is enabled in configuration
+- Check that specific actions are enabled in the action toggles
+- Ensure bot has required permissions (see permission checklist below)
+- Confirm user has moderator role or appropriate Discord permissions
+- Check logs for permission or configuration errors
+
+**Permission errors:**
+- Verify bot has all required permissions in target channels
+- Check bot's role position in server hierarchy
+- Ensure bot role is above roles it needs to manage
+- Confirm user has permission to perform the requested action
+
+### Role Management Issues
+
+**Cannot add/remove roles:**
+- Check bot's role position in server hierarchy (must be above target role)
+- Verify "Manage Roles" permission for the bot
+- Ensure target role exists and is assignable
+- Check that user isn't already assigned/unassigned the role
+- Verify moderator's role hierarchy allows the action
+
+**Role hierarchy errors:**
+- Bot's highest role must be above any role it manages
+- Moderator's highest role must be above the target user's highest role
+- Server owner cannot have roles managed by bots
+- Check role positions in Server Settings > Roles
+
+### User Management Issues
+
+**Timeout command failing:**
+- Verify "Moderate Members" permission for bot
+- Check timeout duration is within valid range (1-40320 minutes)
+- Ensure target user doesn't have higher role than moderator
+- Verify user is not already timed out
+
+**Kick/Ban commands not working:**
+- Check "Kick Members" and "Ban Members" permissions
+- Verify role hierarchy (cannot target equal/higher roles)
+- Ensure user exists in the server
+- Check if user has administrative immunity
+
+**Unban command failing:**
+- Verify user is actually banned (check Discord ban list)
+- Ensure bot has "Ban Members" permission
+- Check that user ID is correct (18-digit Discord ID)
+- Verify ban exists in the server's ban list
+
+### Message Management Issues
+
+**Bulk message deletion failing:**
+- Check "Manage Messages" permission in target channel
+- Verify messages are newer than 14 days (Discord limitation)
+- Ensure message count is within range (1-100)
+- Check that target channel is accessible
+
+**Pin/Unpin commands not working:**
+- Verify "Manage Messages" permission
+- Check that message ID is correct and exists
+- Ensure message is in the specified channel
+- Verify message isn't already pinned/unpinned
+
+### Auto-Moderation Issues
+
+**Auto-moderation not triggering:**
+- Verify auto-moderation is enabled in configuration
+- Check that specific detection types are enabled
+- Ensure users/channels are not in exemption lists
+- Verify bot has "Read Messages" and "Read Message History" permissions
+- Check thresholds and minimum requirements are properly configured
+
+**Spam detection not working:**
+- Verify spam detection is enabled
+- Check message count and time window settings
+- Test with messages exceeding the threshold
+- Ensure action is configured (warn/timeout/kick)
+- Check exemption lists for user/channel exclusions
+
+**Caps detection issues:**
+- Verify caps detection is enabled
+- Check threshold percentage (50-100%)
+- Ensure messages meet minimum length requirement
+- Test with messages exceeding caps threshold
+- Verify action is configured
+
+**Link detection problems:**
+- Check that link detection is enabled
+- Verify whitelist is properly configured
+- Test with both whitelisted and non-whitelisted links
+- Ensure action is configured for violations
+- Check URL format recognition
+
+**Profanity detection not working:**
+- Verify profanity detection is enabled
+- Check custom word list configuration
+- Test with exact word matches
+- Verify action is configured
+- Check for case sensitivity and partial matching
+
+### Configuration Issues
+
+**Action toggles not working:**
+- Verify changes are saved in web interface
+- Check that hot-reload completed successfully
+- Try manual plugin reload if changes don't take effect
+- Restart bot if persistent issues occur
+
+**Auto-moderation settings not saving:**
+- Check JSON syntax in configuration
+- Verify all required fields are present
+- Use web interface for configuration (validates automatically)
+- Check browser console for JavaScript errors
+
+**Exemption lists not working:**
+- Verify role/channel IDs are correct
+- Check that exempted users/channels are actually bypassing detection
+- Ensure exemption lists are properly formatted arrays
+- Test with known exempt and non-exempt entities
+
+### Logging Issues
+
+**Moderation actions not logged:**
+- Verify log channel is configured and accessible
+- Check bot has "Send Messages" permission in log channel
+- Ensure log channel exists and bot can access it
+- Monitor file logs for `[MODERATION]` prefix entries
+
+**Log formatting issues:**
+- Check that embeds are enabled in log channel
+- Verify bot has "Embed Links" permission
+- Monitor for log message truncation or formatting errors
+- Check emoji rendering in log channel
+
+### Permission Checklist
+
+**Required Bot Permissions:**
+- [x] View Channels (basic functionality)
+- [x] Send Messages (responses and logging)
+- [x] Read Message History (auto-moderation)
+- [x] Moderate Members (timeout functionality)
+- [x] Kick Members (kick functionality)
+- [x] Ban Members (ban/unban functionality)
+- [x] Manage Roles (role management)
+- [x] Manage Nicknames (nickname changes)
+- [x] Manage Messages (purging/pinning)
+- [x] Embed Links (rich embeds)
+
+**Role Configuration Checklist:**
+- [x] Bot role is above roles it needs to manage
+- [x] Moderator roles are configured in plugin settings
+- [x] Users have appropriate moderator roles
+- [x] Role hierarchy is properly structured
+- [x] No circular role dependencies
+
+### Performance Issues
+
+**Auto-moderation causing lag:**
+- Reduce detection sensitivity/thresholds
+- Add more channels/roles to exemption lists
+- Check for excessive message volume in monitored channels
+- Monitor bot CPU and memory usage
+
+**Bulk operations timing out:**
+- Use smaller batch sizes for message operations
+- Check for network connectivity issues
+- Monitor Discord API rate limits
+- Verify bot isn't being rate limited
+
 ### High memory usage
 
 - Restart bot process if memory usage is excessive

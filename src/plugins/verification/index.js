@@ -146,7 +146,7 @@ class VerificationPlugin extends Plugin {
             // Remove user from denied list when they resubmit
             if (this.deniedUsers.has(interaction.user.id)) {
                 this.deniedUsers.delete(interaction.user.id);
-                this.log(`Removed ${interaction.user.tag} from denied users list - allowing resubmission`, 'debug');
+                this.log(`Removed ${interaction.member?.displayName || interaction.user.username} from denied users list - allowing resubmission`, 'debug');
             }
 
             // Get character and guild names if required
@@ -211,7 +211,7 @@ class VerificationPlugin extends Plugin {
                 .setColor(0x0099FF)
                 .setTitle(screenshots.length > 0 ? 'Verification Request - Screenshot 1' : 'Verification Request')
                 .addFields(
-                    { name: 'User', value: `${interaction.user} (${interaction.user.tag})`, inline: true }
+                    { name: 'User', value: `${interaction.user} (${interaction.member?.displayName || interaction.user.username})`, inline: true }
                 )
                 .setTimestamp();
 
@@ -267,7 +267,7 @@ class VerificationPlugin extends Plugin {
             if (this.flatConfig.requireGuildName) logDetails.push(`Guild: ${guildName}`);
             logDetails.push(`Screenshots: ${screenshots.length}`);
             
-            this.log(`Verification request submitted by ${interaction.user.tag} (${interaction.user.id}) - ${logDetails.join(', ')}`, 'debug');
+            this.log(`Verification request submitted by ${interaction.member?.displayName || interaction.user.username} (${interaction.user.id}) - ${logDetails.join(', ')}`, 'debug');
 
         } catch (error) {
             this.log(`Error in verify command: ${error}`, 'error');
@@ -337,14 +337,14 @@ class VerificationPlugin extends Plugin {
             if (this.flatConfig.requireCharacterName && characterName && characterName !== 'Not provided') {
                 try {
                     await member.setNickname(characterName);
-                    this.log(`📝 Updated nickname for ${member.user.tag} to "${characterName}"`);
+                    this.log(`📝 Updated nickname for ${member.displayName || member.user.username} to "${characterName}"`);
                 } catch (nicknameError) {
-                    this.log(`❌ Failed to update nickname for ${member.user.tag} to "${characterName}": ${nicknameError.message}`);
+                    this.log(`❌ Failed to update nickname for ${member.displayName || member.user.username} to "${characterName}": ${nicknameError.message}`);
                 }
             } else if (this.flatConfig.requireCharacterName) {
-                this.log(`⚠️ Could not extract character name for ${member.user.tag} - nickname not updated`);
+                this.log(`⚠️ Could not extract character name for ${member.displayName || member.user.username} - nickname not updated`);
             } else {
-                this.log(`ℹ️ Character name not required for ${member.user.tag} - nickname not updated`);
+                this.log(`ℹ️ Character name not required for ${member.displayName || member.user.username} - nickname not updated`);
             }
 
             // Create approval status embed while preserving original content
@@ -365,9 +365,9 @@ class VerificationPlugin extends Plugin {
 
             try {
                 await member.send(this.flatConfig.approvalMessage);
-                this.log(`✅ Approval DM sent to ${member.user.tag}`);
+                this.log(`✅ Approval DM sent to ${member.displayName || member.user.username}`);
             } catch (error) {
-                this.log(`⚠️ Failed to send approval DM to ${member.user.tag}: ${error.message}`);
+                this.log(`⚠️ Failed to send approval DM to ${member.displayName || member.user.username}: ${error.message}`);
                 await interaction.channel.send({
                     content: `Could not DM ${member}. They have been verified but should be notified manually.`,
                     allowedMentions: { users: [] }
@@ -375,7 +375,10 @@ class VerificationPlugin extends Plugin {
             }
 
 
-            const logMessage = `✅ ${interaction.user.tag} verified ${member.user.tag} at ${new Date().toLocaleString()}`;
+            const moderatorMember = interaction.guild.members.cache.get(interaction.user.id);
+            const moderatorName = moderatorMember?.displayName || interaction.user.username;
+            const targetName = member.displayName || member.user.username;
+            const logMessage = `✅ ${moderatorName} verified ${targetName} at ${new Date().toLocaleString()}`;
             this.log(logMessage);
             
             // Send same message to Discord
@@ -447,9 +450,9 @@ class VerificationPlugin extends Plugin {
             member = await interaction.guild.members.fetch(userId);
             const denialDM = `${this.flatConfig.denialMessagePrefix}\nReason: ${reason}`;
             await member.user.send(denialDM);
-            this.log(`✅ Denial DM sent to ${member.user.tag} with reason: ${reason}`);
+            this.log(`✅ Denial DM sent to ${member.displayName || member.user.username} with reason: ${reason}`);
         } catch (error) {
-            this.log(`⚠️ Failed to send denial DM to ${member ? member.user.tag : userId}: ${error.message}`);
+            this.log(`⚠️ Failed to send denial DM to ${member ? (member.displayName || member.user.username) : userId}: ${error.message}`);
             
             // Send DM failure to Discord for moderator awareness
             if (this.flatConfig.logChannelId) {
@@ -469,7 +472,10 @@ class VerificationPlugin extends Plugin {
             flags: 64
         });
 
-        this.log(`❌ ${interaction.user.tag} denied verification for ${member ? member.user.tag : userId}. Reason: ${reason}`);
+        const moderatorMember = interaction.guild.members.cache.get(interaction.user.id);
+        const moderatorName = moderatorMember?.displayName || interaction.user.username;
+        const targetName = member ? (member.displayName || member.user.username) : userId;
+        this.log(`❌ ${moderatorName} denied verification for ${targetName}. Reason: ${reason}`);
         
         // Send to Discord with mentions
         if (this.flatConfig.logChannelId) {

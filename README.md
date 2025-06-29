@@ -27,6 +27,8 @@ Complete user verification system with configurable screenshot requirements, adm
 - Auto-moderation and DM fallback systems
 - Visual role and channel configuration
 
+> **Note**: This verification plugin was originally forked from [discord-verification-bot](https://github.com/Zachdidit/discord-verification-bot) and has been extensively enhanced and integrated into the modular framework.
+
 [📖 Full Documentation](docs/VERIFICATION_PLUGIN.md)
 
 #### Purge Plugin (`/purge`)
@@ -42,6 +44,22 @@ Comprehensive message management system with manual commands and automated sched
 - Multiple schedules for different channels
 
 [📖 Full Documentation](docs/PURGE_PLUGIN.md)
+
+#### Moderation Plugin (`/mod`)
+
+Comprehensive moderation system with manual commands, auto-moderation detection, and extensive configuration options.
+
+**Key Features:**
+
+- Complete moderation toolkit (timeout, kick, ban, warn, etc.)
+- Role and nickname management with hierarchy validation
+- Message management (bulk delete, pin/unpin)
+- Utility commands (user info, server statistics)
+- Advanced auto-moderation (spam, caps, links, profanity detection)
+- Granular action toggles and exemption system
+- Real-time configuration through web interface
+
+[📖 Full Documentation](docs/MODERATION_PLUGIN.md)
 
 ## 🚀 Quick Start
 
@@ -95,6 +113,9 @@ pm2 start index.js --name discord-bot
    - Manage Nicknames
    - Read Message History
    - Use Application Commands
+   - Moderate Members (for timeout functionality)
+   - Kick Members (for kick functionality)
+   - Ban Members (for ban/unban functionality)
 
 ## 📋 Configuration
 
@@ -126,6 +147,15 @@ pm2 start index.js --name discord-bot
       "logging": {
         "channelId": "LOG_CHANNEL_ID"
       }
+    },
+    "moderation": {
+      "enabled": true,
+      "logging": {
+        "channelId": "MODERATION_LOG_CHANNEL_ID"
+      },
+      "roles": {
+        "moderatorRoleIds": ["MODERATOR_ROLE_ID"]
+      }
     }
   }
 }
@@ -137,6 +167,7 @@ For detailed configuration options, see:
 
 - [Verification Plugin Configuration](docs/VERIFICATION_PLUGIN.md#configuration)
 - [Purge Plugin Configuration](docs/PURGE_PLUGIN.md#configuration)
+- [Moderation Plugin Configuration](docs/MODERATION_PLUGIN.md#configuration)
 
 ## 🌐 Web Interface
 
@@ -204,6 +235,7 @@ module.exports = MyPlugin;
 
 - [Verification Plugin](docs/VERIFICATION_PLUGIN.md) - Complete user verification system
 - [Purge Plugin](docs/PURGE_PLUGIN.md) - Message management and auto-purge
+- [Moderation Plugin](docs/MODERATION_PLUGIN.md) - Comprehensive moderation system
 
 ### Development & Operations
 
@@ -230,6 +262,15 @@ node check-config.js        # Validate configuration
 ```
 
 ## 🆕 Recent Updates
+
+### Version 6.0 - Advanced Moderation System
+
+- **Moderation Plugin**: Comprehensive moderation system with `/mod` commands
+- **Auto-Moderation**: Spam, caps, links, and profanity detection with configurable actions
+- **Role Management**: Add/remove roles with hierarchy validation
+- **Message Management**: Bulk delete, pin/unpin messages with smart filtering
+- **Granular Controls**: Individual command toggles and exemption system
+- **Advanced UI**: Dynamic configuration forms with real-time validation
 
 ### Version 5.0 - Enhanced UI & Purge Plugin
 

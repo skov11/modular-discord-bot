@@ -57,6 +57,9 @@
                         <a href="#" class="list-group-item list-group-item-action" data-section="plugins">
                             <i class="fas fa-puzzle-piece"></i> Plugins
                         </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-section="moderation-logs">
+                            <i class="fas fa-gavel"></i> Moderation Logs
+                        </a>
                     </div>
                 </div>
 
@@ -129,6 +132,78 @@
                         <div class="card-body">
                             <div id="plugins-container">
                                 <!-- Plugins will be loaded here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moderation Logs Section -->
+                <div id="moderation-logs-section" class="config-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-gavel"></i> Moderation Logs</h5>
+                            <button class="btn btn-sm btn-outline-primary" id="refresh-logs">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Search Filters -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Search User:</label>
+                                    <input type="text" class="form-control form-control-sm" id="filter-user" placeholder="User ID, username, or display name">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Action Type:</label>
+                                    <select class="form-select form-select-sm" id="filter-action">
+                                        <option value="">All Actions</option>
+                                        <option value="timeout">Timeout</option>
+                                        <option value="kick">Kick</option>
+                                        <option value="ban">Ban</option>
+                                        <option value="unban">Unban</option>
+                                        <option value="warn">Warn</option>
+                                        <option value="slowmode">Slowmode</option>
+                                        <option value="addrole">Add Role</option>
+                                        <option value="removerole">Remove Role</option>
+                                        <option value="nickname">Nickname</option>
+                                        <option value="purgemsg">Purge Messages</option>
+                                        <option value="pin">Pin Message</option>
+                                        <option value="unpin">Unpin Message</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Moderator:</label>
+                                    <input type="text" class="form-control form-control-sm" id="filter-moderator" placeholder="Moderator name or username">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Time Range:</label>
+                                    <select class="form-select form-select-sm" id="filter-hours">
+                                        <option value="">All Time</option>
+                                        <option value="1">Last Hour</option>
+                                        <option value="6">Last 6 Hours</option>
+                                        <option value="24">Last 24 Hours</option>
+                                        <option value="168">Last Week</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <button class="btn btn-primary btn-sm" id="apply-filters">
+                                        <i class="fas fa-search"></i> Apply Filters
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm ms-2" id="clear-filters">
+                                        <i class="fas fa-times"></i> Clear Filters
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Logs Display -->
+                            <div id="logs-container">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                    <p>Loading moderation logs...</p>
+                                </div>
                             </div>
                         </div>
                     </div>

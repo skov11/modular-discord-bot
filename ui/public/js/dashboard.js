@@ -89,6 +89,9 @@ class BotDashboard {
         
         // Setup verifier roles dropdown
         this.setupVerifierRolesDropdown();
+        
+        // Setup moderation logs event listeners
+        this.setupModerationLogsEventListeners();
     }
     
     setupFormChangeDetection() {
@@ -148,12 +151,33 @@ class BotDashboard {
         document.addEventListener('change', (e) => {
             if (e.target.classList.contains('verifier-role-checkbox')) {
                 this.updateVerifierRolesSelection();
+            } else if (e.target.classList.contains('moderator-role-checkbox')) {
+                this.updateModeratorRolesSelection();
+            } else if (e.target.classList.contains('exempt-role-checkbox')) {
+                this.updateExemptRolesSelection();
+            } else if (e.target.classList.contains('exempt-channel-checkbox')) {
+                this.updateExemptChannelsSelection();
+            } else if (e.target.classList.contains('spam-exempt-role-checkbox')) {
+                this.updateSpamExemptRolesSelection();
+            } else if (e.target.classList.contains('caps-exempt-role-checkbox')) {
+                this.updateCapsExemptRolesSelection();
+            } else if (e.target.classList.contains('links-exempt-role-checkbox')) {
+                this.updateLinksExemptRolesSelection();
+            } else if (e.target.classList.contains('profanity-exempt-role-checkbox')) {
+                this.updateProfanityExemptRolesSelection();
+            } else if (e.target.classList.contains('moderation-exempt-role-checkbox')) {
+                this.updateModerationExemptRolesSelection();
+            } else if (e.target.classList.contains('moderation-exempt-channel-checkbox')) {
+                this.updateModerationExemptChannelsSelection();
+            } else if (e.target.id === 'automod-enabled') {
+                this.toggleAutoModerationSettings(e.target.checked);
             }
         });
         
         // Prevent dropdown from closing when clicking inside
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.dropdown-menu') && e.target.closest('#verification-config')) {
+            if (e.target.closest('.dropdown-menu') && 
+                (e.target.closest('#verification-config') || e.target.closest('#moderation-config'))) {
                 e.stopPropagation();
             }
         });
@@ -190,6 +214,214 @@ class BotDashboard {
         
         // Trigger change event for form change detection
         hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    updateModeratorRolesSelection() {
+        const checkboxes = document.querySelectorAll('.moderator-role-checkbox:checked');
+        const hiddenSelect = document.getElementById('moderator-role-ids');
+        const displayText = document.getElementById('moderator-roles-text');
+        
+        if (!hiddenSelect || !displayText) return;
+        
+        // Clear hidden select
+        Array.from(hiddenSelect.options).forEach(option => option.selected = false);
+        
+        // Update hidden select and get role names
+        const selectedRoles = [];
+        checkboxes.forEach(checkbox => {
+            const option = hiddenSelect.querySelector(`option[value="${checkbox.value}"]`);
+            if (option) {
+                option.selected = true;
+                selectedRoles.push(option.textContent.trim());
+            }
+        });
+        
+        // Update display text
+        if (selectedRoles.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (selectedRoles.length === 1) {
+            displayText.textContent = selectedRoles[0];
+        } else {
+            displayText.textContent = `${selectedRoles.length} roles selected`;
+        }
+        
+        // Trigger change event for form change detection
+        hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    toggleAutoModerationSettings(enabled) {
+        const automodSettings = document.getElementById('automod-settings');
+        if (automodSettings) {
+            automodSettings.style.display = enabled ? 'block' : 'none';
+        }
+    }
+
+    updateExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.exempt-role-checkbox:checked');
+        const hiddenSelect = document.getElementById('exempt-roles');
+        const displayText = document.getElementById('exempt-roles-text');
+        
+        if (!hiddenSelect || !displayText) return;
+        
+        // Clear hidden select
+        Array.from(hiddenSelect.options).forEach(option => option.selected = false);
+        
+        // Update hidden select and get role names
+        const selectedRoles = [];
+        checkboxes.forEach(checkbox => {
+            const option = hiddenSelect.querySelector(`option[value="${checkbox.value}"]`);
+            if (option) {
+                option.selected = true;
+                selectedRoles.push(option.textContent.trim());
+            }
+        });
+        
+        // Update display text
+        if (selectedRoles.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (selectedRoles.length === 1) {
+            displayText.textContent = selectedRoles[0];
+        } else {
+            displayText.textContent = `${selectedRoles.length} roles selected`;
+        }
+        
+        // Trigger change event for form change detection
+        hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    updateExemptChannelsSelection() {
+        const checkboxes = document.querySelectorAll('.exempt-channel-checkbox:checked');
+        const hiddenSelect = document.getElementById('exempt-channels');
+        const displayText = document.getElementById('exempt-channels-text');
+        
+        if (!hiddenSelect || !displayText) return;
+        
+        // Clear hidden select
+        Array.from(hiddenSelect.options).forEach(option => option.selected = false);
+        
+        // Update hidden select and get channel names
+        const selectedChannels = [];
+        checkboxes.forEach(checkbox => {
+            const option = hiddenSelect.querySelector(`option[value="${checkbox.value}"]`);
+            if (option) {
+                option.selected = true;
+                selectedChannels.push(option.textContent.trim());
+            }
+        });
+        
+        // Update display text
+        if (selectedChannels.length === 0) {
+            displayText.textContent = 'Select channels...';
+        } else if (selectedChannels.length === 1) {
+            displayText.textContent = selectedChannels[0];
+        } else {
+            displayText.textContent = `${selectedChannels.length} channels selected`;
+        }
+        
+        // Trigger change event for form change detection
+        hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    updateSpamExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.spam-exempt-role-checkbox:checked');
+        const displayText = document.getElementById('spam-exempt-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            const role = this.availableRoles.find(r => r.id === roleId);
+            displayText.textContent = role ? role.name : '1 role selected';
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+
+    updateCapsExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.caps-exempt-role-checkbox:checked');
+        const displayText = document.getElementById('caps-exempt-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            const role = this.availableRoles.find(r => r.id === roleId);
+            displayText.textContent = role ? role.name : '1 role selected';
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+
+    updateLinksExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.links-exempt-role-checkbox:checked');
+        const displayText = document.getElementById('links-exempt-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            const role = this.availableRoles.find(r => r.id === roleId);
+            displayText.textContent = role ? role.name : '1 role selected';
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+
+    updateProfanityExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.profanity-exempt-role-checkbox:checked');
+        const displayText = document.getElementById('profanity-exempt-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            const role = this.availableRoles.find(r => r.id === roleId);
+            displayText.textContent = role ? role.name : '1 role selected';
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+    
+    updateModerationExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.moderation-exempt-role-checkbox:checked');
+        const displayText = document.getElementById('moderation-exempt-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            const role = this.availableRoles.find(r => r.id === roleId);
+            displayText.textContent = role ? role.name : '1 role selected';
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+    
+    updateModerationExemptChannelsSelection() {
+        const checkboxes = document.querySelectorAll('.moderation-exempt-channel-checkbox:checked');
+        const displayText = document.getElementById('moderation-exempt-channels-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select channels...';
+        } else if (checkboxes.length === 1) {
+            const channelId = checkboxes[0].value;
+            const channel = this.availableChannels.find(c => c.id === channelId);
+            displayText.textContent = channel ? `#${channel.name}` : '1 channel selected';
+        } else {
+            displayText.textContent = `${checkboxes.length} channels selected`;
+        }
     }
     
     trackModifiedSection(element) {
@@ -385,9 +617,18 @@ class BotDashboard {
         // Re-render plugin configuration
         this.renderPluginConfiguration();
         
-        // Update verifier roles display after render
+        // Update all multi-select dropdowns display after render
         setTimeout(() => {
             this.updateVerifierRolesSelection();
+            this.updateModeratorRolesSelection();
+            this.updateExemptRolesSelection();
+            this.updateExemptChannelsSelection();
+            this.updateSpamExemptRolesSelection();
+            this.updateCapsExemptRolesSelection();
+            this.updateLinksExemptRolesSelection();
+            this.updateProfanityExemptRolesSelection();
+            this.updateModerationExemptRolesSelection();
+            this.updateModerationExemptChannelsSelection();
         }, 50);
         
         // Reset change tracking after initial population
@@ -429,6 +670,8 @@ class BotDashboard {
             card.innerHTML = this.createVerificationPluginForm(config);
         } else if (plugin.name === 'purge') {
             card.innerHTML = this.createPurgePluginForm(config);
+        } else if (plugin.name === 'moderation') {
+            card.innerHTML = this.createModerationPluginForm(config);
         } else {
             card.innerHTML = this.createGenericPluginForm(plugin, config);
         }
@@ -679,6 +922,585 @@ class BotDashboard {
         `;
     }
     
+    createModerationPluginForm(config) {
+        return `
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <h6 class="mb-0 me-3"><i class="fas fa-shield-alt"></i> Moderation Plugin</h6>
+                    <button class="btn btn-sm btn-outline-secondary collapse-toggle collapsed" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#moderation-config" aria-expanded="false" aria-controls="moderation-config"
+                            title="Toggle configuration section">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info ms-2 reload-plugin-btn" type="button" 
+                            data-plugin="moderation" title="Reload plugin">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div class="ms-auto me-3">
+                        <span class="badge bg-secondary">/mod</span>
+                        <span class="badge bg-secondary ms-1">/modtest</span>
+                    </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="moderation-enabled" 
+                           ${config.enabled !== false ? 'checked' : ''}>
+                    <label class="form-check-label" for="moderation-enabled">Enabled</label>
+                </div>
+            </div>
+            <div class="collapse" id="moderation-config">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Logging</h6>
+                            <div class="mb-3">
+                                <label for="moderation-log-channel-id" class="form-label">Log Channel</label>
+                                <select class="form-select" id="moderation-log-channel-id">
+                                    <option value="">Select a channel...</option>
+                                    ${this.availableChannels.map(channel => 
+                                        `<option value="${channel.id}" ${config.logging?.channelId === channel.id ? 'selected' : ''}>
+                                            ${channel.category} / #${channel.name}
+                                        </option>`
+                                    ).join('')}
+                                </select>
+                                <div class="form-text">Channel where moderation actions will be logged</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Permissions</h6>
+                            <div class="mb-3">
+                                <label for="moderator-role-ids" class="form-label">Moderator Roles</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                            id="moderator-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span id="moderator-roles-text">Select roles...</span>
+                                    </button>
+                                    <div class="dropdown-menu w-100 p-2" aria-labelledby="moderator-roles-dropdown" 
+                                         style="max-height: 300px; overflow-y: auto;">
+                                        ${this.availableRoles.map(role => 
+                                            `<div class="form-check">
+                                                <input class="form-check-input moderator-role-checkbox" type="checkbox" 
+                                                       value="${role.id}" id="moderator-${role.id}"
+                                                       ${config.roles?.moderatorRoleIds?.includes(role.id) ? 'checked' : ''}>
+                                                <label class="form-check-label d-flex align-items-center" for="moderator-${role.id}">
+                                                    <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                    ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                </label>
+                                            </div>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                <select class="form-select d-none" id="moderator-role-ids" multiple>
+                                    ${this.availableRoles.map(role => 
+                                        `<option value="${role.id}" ${config.roles?.moderatorRoleIds?.includes(role.id) ? 'selected' : ''}>
+                                            ${role.name}
+                                        </option>`
+                                    ).join('')}
+                                </select>
+                                <div class="form-text">Select roles that can use moderation commands</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6>Moderation Actions</h6>
+                            <div class="form-text mb-3">Enable or disable specific moderation commands</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-timeout" 
+                                               ${config.actions?.timeout !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-timeout">
+                                            <strong>Timeout</strong> - Temporarily restrict users
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-kick" 
+                                               ${config.actions?.kick !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-kick">
+                                            <strong>Kick</strong> - Remove users from server
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-ban" 
+                                               ${config.actions?.ban !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-ban">
+                                            <strong>Ban</strong> - Permanently ban users
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-unban" 
+                                               ${config.actions?.unban !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-unban">
+                                            <strong>Unban</strong> - Remove user bans
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-warn" 
+                                               ${config.actions?.warn !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-warn">
+                                            <strong>Warn</strong> - Issue warnings to users
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-slowmode" 
+                                               ${config.actions?.slowmode !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-slowmode">
+                                            <strong>Slowmode</strong> - Set channel rate limits
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-addrole" 
+                                               ${config.actions?.addrole !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-addrole">
+                                            <strong>Add Role</strong> - Assign roles to users
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-removerole" 
+                                               ${config.actions?.removerole !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-removerole">
+                                            <strong>Remove Role</strong> - Remove roles from users
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-nickname" 
+                                               ${config.actions?.nickname !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-nickname">
+                                            <strong>Nickname</strong> - Change user nicknames
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-purgemsg" 
+                                               ${config.actions?.purgemsg !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-purgemsg">
+                                            <strong>Purge Messages</strong> - Bulk delete messages
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-pin" 
+                                               ${config.actions?.pin !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-pin">
+                                            <strong>Pin Message</strong> - Pin messages to channel
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-unpin" 
+                                               ${config.actions?.unpin !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-unpin">
+                                            <strong>Unpin Message</strong> - Unpin messages from channel
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-userinfo" 
+                                               ${config.actions?.userinfo !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-userinfo">
+                                            <strong>User Info</strong> - Display user details and history
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="action-serverstats" 
+                                               ${config.actions?.serverstats !== false ? 'checked' : ''}>
+                                        <label class="form-check-label" for="action-serverstats">
+                                            <strong>Server Stats</strong> - Display server statistics
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6>Moderation Exemptions</h6>
+                            <div class="form-text mb-3">Users with exempt roles and messages in exempt channels cannot be moderated</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Exempt Roles</label>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                id="moderation-exempt-roles-dropdown" data-bs-toggle="dropdown">
+                                            <span id="moderation-exempt-roles-text">Select roles...</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
+                                            ${this.availableRoles.map(role => {
+                                                const isChecked = config.exemptRoles?.includes(role.id) ? 'checked' : '';
+                                                const roleColor = role.color ? `color: #${role.color.toString(16).padStart(6, '0')};` : '';
+                                                const botBadge = role.managed ? '<span class="badge bg-info ms-1">BOT</span>' : '';
+                                                return `
+                                                    <label class="dropdown-item-text d-flex align-items-center">
+                                                        <input type="checkbox" class="form-check-input me-2 moderation-exempt-role-checkbox" 
+                                                               value="${role.id}" ${isChecked}>
+                                                        <span style="${roleColor}">${role.name}</span>
+                                                        ${botBadge}
+                                                    </label>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                    <select id="moderation-exempt-roles" multiple style="display: none;">
+                                        ${config.exemptRoles?.map(roleId => {
+                                            return `<option value="${roleId}" selected></option>`;
+                                        }).join('') || ''}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Exempt Channels</label>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                id="moderation-exempt-channels-dropdown" data-bs-toggle="dropdown">
+                                            <span id="moderation-exempt-channels-text">Select channels...</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
+                                            ${this.availableChannels.map(channel => {
+                                                const isChecked = config.exemptChannels?.includes(channel.id) ? 'checked' : '';
+                                                const categoryPrefix = channel.category ? `${channel.category} / ` : '';
+                                                return `
+                                                    <label class="dropdown-item-text d-flex align-items-center">
+                                                        <input type="checkbox" class="form-check-input me-2 moderation-exempt-channel-checkbox" 
+                                                               value="${channel.id}" ${isChecked}>
+                                                        <span>${categoryPrefix}#${channel.name}</span>
+                                                    </label>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                    <select id="moderation-exempt-channels" multiple style="display: none;">
+                                        ${config.exemptChannels?.map(channelId => {
+                                            return `<option value="${channelId}" selected></option>`;
+                                        }).join('') || ''}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6>Auto-Moderation</h6>
+                            <div class="form-text mb-3">Automatic detection and action on rule violations</div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="automod-enabled" 
+                                       ${config.autoModeration?.enabled === true ? 'checked' : ''}>
+                                <label class="form-check-label" for="automod-enabled">
+                                    <strong>Enable Auto-Moderation</strong>
+                                </label>
+                            </div>
+                            
+                            <div id="automod-settings" style="display: ${config.autoModeration?.enabled === true ? 'block' : 'none'};">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Spam Detection</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="spam-enabled" 
+                                                           ${config.autoModeration?.spam?.enabled !== false ? 'checked' : ''}>
+                                                    <label class="form-check-label" for="spam-enabled">Enable</label>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="spam-max-messages" class="form-label">Max Messages</label>
+                                                    <input type="number" class="form-control" id="spam-max-messages" 
+                                                           value="${config.autoModeration?.spam?.maxMessages || 5}" min="2" max="20">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="spam-time-window" class="form-label">Time Window (seconds)</label>
+                                                    <input type="number" class="form-control" id="spam-time-window" 
+                                                           value="${config.autoModeration?.spam?.timeWindow || 10}" min="5" max="60">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="spam-action" class="form-label">Action</label>
+                                                    <select class="form-select" id="spam-action">
+                                                        <option value="warn" ${config.autoModeration?.spam?.action === 'warn' ? 'selected' : ''}>Warn</option>
+                                                        <option value="timeout" ${config.autoModeration?.spam?.action === 'timeout' ? 'selected' : ''}>Timeout</option>
+                                                        <option value="kick" ${config.autoModeration?.spam?.action === 'kick' ? 'selected' : ''}>Kick</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="spam-duration" class="form-label">Timeout Duration (seconds)</label>
+                                                    <input type="number" class="form-control" id="spam-duration" 
+                                                           value="${config.autoModeration?.spam?.duration || 300}" min="60" max="2419200">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="spam-exempt-roles" class="form-label">Exempt Roles</label>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                                id="spam-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <span id="spam-exempt-roles-text">Select roles...</span>
+                                                        </button>
+                                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="spam-exempt-roles-dropdown" 
+                                                             style="max-height: 200px; overflow-y: auto;">
+                                                            ${this.availableRoles.map(role => 
+                                                                `<div class="form-check">
+                                                                    <input class="form-check-input spam-exempt-role-checkbox" type="checkbox" 
+                                                                           value="${role.id}" id="spam-exempt-role-${role.id}"
+                                                                           ${config.autoModeration?.spam?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                                    <label class="form-check-label d-flex align-items-center" for="spam-exempt-role-${role.id}">
+                                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                                    </label>
+                                                                </div>`
+                                                            ).join('')}
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-text">Roles exempt from spam detection</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Caps Detection</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="caps-enabled" 
+                                                           ${config.autoModeration?.caps?.enabled !== false ? 'checked' : ''}>
+                                                    <label class="form-check-label" for="caps-enabled">Enable</label>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="caps-threshold" class="form-label">Caps Threshold (%)</label>
+                                                    <input type="number" class="form-control" id="caps-threshold" 
+                                                           value="${config.autoModeration?.caps?.threshold || 70}" min="50" max="100">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="caps-min-length" class="form-label">Min Message Length</label>
+                                                    <input type="number" class="form-control" id="caps-min-length" 
+                                                           value="${config.autoModeration?.caps?.minLength || 10}" min="5" max="50">
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="caps-action" class="form-label">Action</label>
+                                                    <select class="form-select" id="caps-action">
+                                                        <option value="warn" ${config.autoModeration?.caps?.action === 'warn' ? 'selected' : ''}>Warn</option>
+                                                        <option value="delete" ${config.autoModeration?.caps?.action === 'delete' ? 'selected' : ''}>Delete Message</option>
+                                                        <option value="timeout" ${config.autoModeration?.caps?.action === 'timeout' ? 'selected' : ''}>Timeout</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="caps-exempt-roles" class="form-label">Exempt Roles</label>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                                id="caps-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <span id="caps-exempt-roles-text">Select roles...</span>
+                                                        </button>
+                                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="caps-exempt-roles-dropdown" 
+                                                             style="max-height: 200px; overflow-y: auto;">
+                                                            ${this.availableRoles.map(role => 
+                                                                `<div class="form-check">
+                                                                    <input class="form-check-input caps-exempt-role-checkbox" type="checkbox" 
+                                                                           value="${role.id}" id="caps-exempt-role-${role.id}"
+                                                                           ${config.autoModeration?.caps?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                                    <label class="form-check-label d-flex align-items-center" for="caps-exempt-role-${role.id}">
+                                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                                    </label>
+                                                                </div>`
+                                                            ).join('')}
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-text">Roles exempt from caps detection</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Link Detection</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="links-enabled" 
+                                                           ${config.autoModeration?.links?.enabled === true ? 'checked' : ''}>
+                                                    <label class="form-check-label" for="links-enabled">Enable</label>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="links-whitelist" class="form-label">Whitelisted Domains</label>
+                                                    <textarea class="form-control" id="links-whitelist" rows="3" 
+                                                              placeholder="discord.gg, youtube.com, github.com">${config.autoModeration?.links?.whitelist?.join(', ') || ''}</textarea>
+                                                    <div class="form-text">Comma-separated list of allowed domains</div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="links-action" class="form-label">Action</label>
+                                                    <select class="form-select" id="links-action">
+                                                        <option value="warn" ${config.autoModeration?.links?.action === 'warn' ? 'selected' : ''}>Warn</option>
+                                                        <option value="delete" ${config.autoModeration?.links?.action === 'delete' ? 'selected' : ''}>Delete Message</option>
+                                                        <option value="timeout" ${config.autoModeration?.links?.action === 'timeout' ? 'selected' : ''}>Timeout</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="links-exempt-roles" class="form-label">Exempt Roles</label>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                                id="links-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <span id="links-exempt-roles-text">Select roles...</span>
+                                                        </button>
+                                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="links-exempt-roles-dropdown" 
+                                                             style="max-height: 200px; overflow-y: auto;">
+                                                            ${this.availableRoles.map(role => 
+                                                                `<div class="form-check">
+                                                                    <input class="form-check-input links-exempt-role-checkbox" type="checkbox" 
+                                                                           value="${role.id}" id="links-exempt-role-${role.id}"
+                                                                           ${config.autoModeration?.links?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                                    <label class="form-check-label d-flex align-items-center" for="links-exempt-role-${role.id}">
+                                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                                    </label>
+                                                                </div>`
+                                                            ).join('')}
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-text">Roles exempt from link detection</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Profanity Detection</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-check form-switch mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="profanity-enabled" 
+                                                           ${config.autoModeration?.profanity?.enabled === true ? 'checked' : ''}>
+                                                    <label class="form-check-label" for="profanity-enabled">Enable</label>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="profanity-words" class="form-label">Custom Words</label>
+                                                    <textarea class="form-control" id="profanity-words" rows="3" 
+                                                              placeholder="word1, word2, word3">${config.autoModeration?.profanity?.customWords?.join(', ') || ''}</textarea>
+                                                    <div class="form-text">Comma-separated list of custom blocked words</div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="profanity-action" class="form-label">Action</label>
+                                                    <select class="form-select" id="profanity-action">
+                                                        <option value="warn" ${config.autoModeration?.profanity?.action === 'warn' ? 'selected' : ''}>Warn</option>
+                                                        <option value="delete" ${config.autoModeration?.profanity?.action === 'delete' ? 'selected' : ''}>Delete Message</option>
+                                                        <option value="timeout" ${config.autoModeration?.profanity?.action === 'timeout' ? 'selected' : ''}>Timeout</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label for="profanity-exempt-roles" class="form-label">Exempt Roles</label>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                                id="profanity-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <span id="profanity-exempt-roles-text">Select roles...</span>
+                                                        </button>
+                                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="profanity-exempt-roles-dropdown" 
+                                                             style="max-height: 200px; overflow-y: auto;">
+                                                            ${this.availableRoles.map(role => 
+                                                                `<div class="form-check">
+                                                                    <input class="form-check-input profanity-exempt-role-checkbox" type="checkbox" 
+                                                                           value="${role.id}" id="profanity-exempt-role-${role.id}"
+                                                                           ${config.autoModeration?.profanity?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                                    <label class="form-check-label d-flex align-items-center" for="profanity-exempt-role-${role.id}">
+                                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                                    </label>
+                                                                </div>`
+                                                            ).join('')}
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-text">Roles exempt from profanity detection</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Exemptions</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label for="exempt-roles" class="form-label">Exempt Roles</label>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                                    id="exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <span id="exempt-roles-text">Select roles...</span>
+                                                            </button>
+                                                            <div class="dropdown-menu w-100 p-2" aria-labelledby="exempt-roles-dropdown" 
+                                                                 style="max-height: 300px; overflow-y: auto;">
+                                                                ${this.availableRoles.map(role => 
+                                                                    `<div class="form-check">
+                                                                        <input class="form-check-input exempt-role-checkbox" type="checkbox" 
+                                                                               value="${role.id}" id="exempt-role-${role.id}"
+                                                                               ${config.autoModeration?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                                        <label class="form-check-label d-flex align-items-center" for="exempt-role-${role.id}">
+                                                                            <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                                                  width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                                            ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                                        </label>
+                                                                    </div>`
+                                                                ).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <select class="form-select d-none" id="exempt-roles" multiple>
+                                                            ${this.availableRoles.map(role => 
+                                                                `<option value="${role.id}" ${config.autoModeration?.exemptRoles?.includes(role.id) ? 'selected' : ''}>
+                                                                    ${role.name}
+                                                                </option>`
+                                                            ).join('')}
+                                                        </select>
+                                                        <div class="form-text">Roles exempt from auto-moderation</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="exempt-channels" class="form-label">Exempt Channels</label>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                                    id="exempt-channels-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <span id="exempt-channels-text">Select channels...</span>
+                                                            </button>
+                                                            <div class="dropdown-menu w-100 p-2" aria-labelledby="exempt-channels-dropdown" 
+                                                                 style="max-height: 300px; overflow-y: auto;">
+                                                                ${this.availableChannels.map(channel => 
+                                                                    `<div class="form-check">
+                                                                        <input class="form-check-input exempt-channel-checkbox" type="checkbox" 
+                                                                               value="${channel.id}" id="exempt-channel-${channel.id}"
+                                                                               ${config.autoModeration?.exemptChannels?.includes(channel.id) ? 'checked' : ''}>
+                                                                        <label class="form-check-label" for="exempt-channel-${channel.id}">
+                                                                            ${channel.category} / #${channel.name}
+                                                                        </label>
+                                                                    </div>`
+                                                                ).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <select class="form-select d-none" id="exempt-channels" multiple>
+                                                            ${this.availableChannels.map(channel => 
+                                                                `<option value="${channel.id}" ${config.autoModeration?.exemptChannels?.includes(channel.id) ? 'selected' : ''}>
+                                                                    ${channel.category} / #${channel.name}
+                                                                </option>`
+                                                            ).join('')}
+                                                        </select>
+                                                        <div class="form-text">Channels exempt from auto-moderation</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
     createGenericPluginForm(plugin, config) {
         const pluginId = `${plugin.name}-config`;
         return `
@@ -843,6 +1665,132 @@ class BotDashboard {
             });
             this.config.plugins.purge.autoPurge.schedules = schedules;
         }
+        
+        // Update moderation plugin (preserve existing settings)
+        const moderationEnabled = document.getElementById('moderation-enabled');
+        if (moderationEnabled) {
+            if (!this.config.plugins.moderation) {
+                this.config.plugins.moderation = {};
+            }
+            
+            this.config.plugins.moderation.enabled = moderationEnabled.checked;
+            
+            // Update logging settings
+            if (!this.config.plugins.moderation.logging) {
+                this.config.plugins.moderation.logging = {};
+            }
+            this.config.plugins.moderation.logging.channelId = document.getElementById('moderation-log-channel-id')?.value || '';
+            
+            // Update roles settings
+            if (!this.config.plugins.moderation.roles) {
+                this.config.plugins.moderation.roles = {};
+            }
+            
+            // Get selected moderator roles from multi-select
+            const moderatorSelect = document.getElementById('moderator-role-ids');
+            const selectedModerator = Array.from(moderatorSelect?.selectedOptions || []);
+            this.config.plugins.moderation.roles.moderatorRoleIds = selectedModerator.map(option => option.value);
+            
+            // Update actions settings
+            if (!this.config.plugins.moderation.actions) {
+                this.config.plugins.moderation.actions = {};
+            }
+            
+            this.config.plugins.moderation.actions.timeout = document.getElementById('action-timeout')?.checked !== false;
+            this.config.plugins.moderation.actions.kick = document.getElementById('action-kick')?.checked !== false;
+            this.config.plugins.moderation.actions.ban = document.getElementById('action-ban')?.checked !== false;
+            this.config.plugins.moderation.actions.unban = document.getElementById('action-unban')?.checked !== false;
+            this.config.plugins.moderation.actions.warn = document.getElementById('action-warn')?.checked !== false;
+            this.config.plugins.moderation.actions.slowmode = document.getElementById('action-slowmode')?.checked !== false;
+            this.config.plugins.moderation.actions.addrole = document.getElementById('action-addrole')?.checked !== false;
+            this.config.plugins.moderation.actions.removerole = document.getElementById('action-removerole')?.checked !== false;
+            this.config.plugins.moderation.actions.nickname = document.getElementById('action-nickname')?.checked !== false;
+            this.config.plugins.moderation.actions.purgemsg = document.getElementById('action-purgemsg')?.checked !== false;
+            this.config.plugins.moderation.actions.pin = document.getElementById('action-pin')?.checked !== false;
+            this.config.plugins.moderation.actions.unpin = document.getElementById('action-unpin')?.checked !== false;
+            this.config.plugins.moderation.actions.userinfo = document.getElementById('action-userinfo')?.checked !== false;
+            this.config.plugins.moderation.actions.serverstats = document.getElementById('action-serverstats')?.checked !== false;
+            
+            // Moderation exemptions
+            this.config.plugins.moderation.exemptRoles = 
+                Array.from(document.querySelectorAll('.moderation-exempt-role-checkbox:checked'))
+                    .map(cb => cb.value);
+            this.config.plugins.moderation.exemptChannels = 
+                Array.from(document.querySelectorAll('.moderation-exempt-channel-checkbox:checked'))
+                    .map(cb => cb.value);
+            
+            // Update auto-moderation settings
+            if (!this.config.plugins.moderation.autoModeration) {
+                this.config.plugins.moderation.autoModeration = {};
+            }
+            
+            this.config.plugins.moderation.autoModeration.enabled = document.getElementById('automod-enabled')?.checked === true;
+            
+            // Spam detection settings
+            if (!this.config.plugins.moderation.autoModeration.spam) {
+                this.config.plugins.moderation.autoModeration.spam = {};
+            }
+            this.config.plugins.moderation.autoModeration.spam.enabled = document.getElementById('spam-enabled')?.checked !== false;
+            this.config.plugins.moderation.autoModeration.spam.maxMessages = parseInt(document.getElementById('spam-max-messages')?.value) || 5;
+            this.config.plugins.moderation.autoModeration.spam.timeWindow = parseInt(document.getElementById('spam-time-window')?.value) || 10;
+            this.config.plugins.moderation.autoModeration.spam.action = document.getElementById('spam-action')?.value || 'timeout';
+            this.config.plugins.moderation.autoModeration.spam.duration = parseInt(document.getElementById('spam-duration')?.value) || 300;
+            
+            // Caps detection settings
+            if (!this.config.plugins.moderation.autoModeration.caps) {
+                this.config.plugins.moderation.autoModeration.caps = {};
+            }
+            this.config.plugins.moderation.autoModeration.caps.enabled = document.getElementById('caps-enabled')?.checked !== false;
+            this.config.plugins.moderation.autoModeration.caps.threshold = parseInt(document.getElementById('caps-threshold')?.value) || 70;
+            this.config.plugins.moderation.autoModeration.caps.minLength = parseInt(document.getElementById('caps-min-length')?.value) || 10;
+            this.config.plugins.moderation.autoModeration.caps.action = document.getElementById('caps-action')?.value || 'warn';
+            
+            // Links detection settings
+            if (!this.config.plugins.moderation.autoModeration.links) {
+                this.config.plugins.moderation.autoModeration.links = {};
+            }
+            this.config.plugins.moderation.autoModeration.links.enabled = document.getElementById('links-enabled')?.checked === true;
+            this.config.plugins.moderation.autoModeration.links.action = document.getElementById('links-action')?.value || 'delete';
+            const linksWhitelist = document.getElementById('links-whitelist')?.value.trim();
+            this.config.plugins.moderation.autoModeration.links.whitelist = linksWhitelist ? 
+                linksWhitelist.split(',').map(s => s.trim()).filter(s => s) : [];
+            
+            // Profanity detection settings
+            if (!this.config.plugins.moderation.autoModeration.profanity) {
+                this.config.plugins.moderation.autoModeration.profanity = {};
+            }
+            this.config.plugins.moderation.autoModeration.profanity.enabled = document.getElementById('profanity-enabled')?.checked === true;
+            this.config.plugins.moderation.autoModeration.profanity.action = document.getElementById('profanity-action')?.value || 'warn';
+            const profanityWords = document.getElementById('profanity-words')?.value.trim();
+            this.config.plugins.moderation.autoModeration.profanity.customWords = profanityWords ? 
+                profanityWords.split(',').map(s => s.trim()).filter(s => s) : [];
+            
+            // Individual action exempt roles
+            this.config.plugins.moderation.autoModeration.spam.exemptRoles = 
+                Array.from(document.querySelectorAll('.spam-exempt-role-checkbox:checked'))
+                    .map(cb => cb.value);
+            
+            this.config.plugins.moderation.autoModeration.caps.exemptRoles = 
+                Array.from(document.querySelectorAll('.caps-exempt-role-checkbox:checked'))
+                    .map(cb => cb.value);
+            
+            this.config.plugins.moderation.autoModeration.links.exemptRoles = 
+                Array.from(document.querySelectorAll('.links-exempt-role-checkbox:checked'))
+                    .map(cb => cb.value);
+            
+            this.config.plugins.moderation.autoModeration.profanity.exemptRoles = 
+                Array.from(document.querySelectorAll('.profanity-exempt-role-checkbox:checked'))
+                    .map(cb => cb.value);
+            
+            // Exemption settings
+            const exemptRolesSelect = document.getElementById('exempt-roles');
+            const exemptChannelsSelect = document.getElementById('exempt-channels');
+            
+            this.config.plugins.moderation.autoModeration.exemptRoles = exemptRolesSelect ? 
+                Array.from(exemptRolesSelect.selectedOptions).map(option => option.value) : [];
+            this.config.plugins.moderation.autoModeration.exemptChannels = exemptChannelsSelect ? 
+                Array.from(exemptChannelsSelect.selectedOptions).map(option => option.value) : [];
+        }
     }
     
     async saveConfiguration() {
@@ -979,6 +1927,11 @@ class BotDashboard {
             link.classList.remove('active');
         });
         document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+        
+        // Load moderation logs if showing that section
+        if (sectionName === 'moderation-logs') {
+            this.loadModerationLogs();
+        }
     }
     
     createPurgeSchedules(schedules) {
@@ -1046,9 +1999,8 @@ class BotDashboard {
                                                     <input class="form-check-input schedule-channel-checkbox" type="checkbox" 
                                                            value="${channel.id}" id="schedule-${index}-channel-${channel.id}"
                                                            data-schedule-index="${index}" ${isSelected ? 'checked' : ''}>
-                                                    <label class="form-check-label d-flex align-items-center" for="schedule-${index}-channel-${channel.id}">
-                                                        <span class="badge bg-secondary me-2" style="font-size: 0.7em;">${channel.category}</span>
-                                                        #${channel.name}
+                                                    <label class="form-check-label" for="schedule-${index}-channel-${channel.id}">
+                                                        ${channel.category} / #${channel.name}
                                                     </label>
                                                 </div>
                                             `;
@@ -1266,6 +2218,156 @@ class BotDashboard {
                 alert.remove();
             }
         }, 5000);
+    }
+
+    async loadModerationLogs(filters = {}) {
+        try {
+            const params = new URLSearchParams();
+            if (filters.userId) params.append('userId', filters.userId);
+            if (filters.action) params.append('action', filters.action);
+            if (filters.moderator) params.append('moderator', filters.moderator);
+            if (filters.hours) params.append('hours', filters.hours);
+
+            const response = await fetch(`/api/moderation/logs?${params}`);
+            const data = await response.json();
+
+            if (data.success) {
+                this.displayModerationLogs(data.logs);
+            } else {
+                this.displayModerationLogsError(data.message || 'Failed to load moderation logs');
+            }
+        } catch (error) {
+            console.error('Error loading moderation logs:', error);
+            this.displayModerationLogsError('Error loading moderation logs');
+        }
+    }
+
+    displayModerationLogs(logs) {
+        const container = document.getElementById('logs-container');
+        
+        if (logs.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i>
+                    <p>No moderation logs found matching the current filters.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const logsHtml = logs.map(log => {
+            const actionEmojis = {
+                timeout: "🔇", kick: "👢", ban: "🔨", unban: "✅", warn: "⚠️",
+                slowmode: "🐌", addrole: "➕", removerole: "➖", nickname: "📝",
+                purgemsg: "🗑️", pin: "📌", unpin: "📌"
+            };
+            
+            const emoji = actionEmojis[log.action] || "🛡️";
+            const actionName = log.action.charAt(0).toUpperCase() + log.action.slice(1);
+            const timestamp = new Date(log.timestamp).toLocaleString();
+            
+            let extraInfo = '';
+            if (log.duration) extraInfo += ` (${log.duration} min)`;
+            if (log.role) extraInfo += ` (${log.role})`;
+            if (log.channel) extraInfo += ` in ${log.channel}`;
+            if (log.count) extraInfo += ` (${log.count} messages)`;
+            
+            return `
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-md-1 text-center">
+                                <span class="fs-4">${emoji}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>${actionName}</strong>${extraInfo}
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Target:</small><br>
+                                ${log.targetUser ? 
+                                    `<strong>${log.targetUser.displayName}</strong><br><small class="text-muted">${log.targetUser.id}</small>` : 
+                                    `<code>${log.userId}</code>`
+                                }
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Moderator:</small><br>
+                                ${log.moderator.displayName || log.moderator.tag}
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Time:</small><br>
+                                ${timestamp}
+                            </div>
+                        </div>
+                        ${log.reason ? `
+                            <div class="row mt-1">
+                                <div class="col-md-11 offset-md-1">
+                                    <small class="text-muted">Reason:</small> ${log.reason}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="mb-3">
+                <small class="text-muted">Showing ${logs.length} log entries</small>
+            </div>
+            ${logsHtml}
+        `;
+    }
+
+    displayModerationLogsError(message) {
+        const container = document.getElementById('logs-container');
+        container.innerHTML = `
+            <div class="text-center text-danger">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+
+    setupModerationLogsEventListeners() {
+        // Refresh logs button
+        document.getElementById('refresh-logs')?.addEventListener('click', () => {
+            this.loadModerationLogs();
+        });
+
+        // Apply filters button
+        document.getElementById('apply-filters')?.addEventListener('click', () => {
+            const filters = {
+                userId: document.getElementById('filter-user')?.value.trim(),
+                action: document.getElementById('filter-action')?.value,
+                moderator: document.getElementById('filter-moderator')?.value.trim(),
+                hours: document.getElementById('filter-hours')?.value
+            };
+            
+            // Remove empty filters
+            Object.keys(filters).forEach(key => {
+                if (!filters[key]) delete filters[key];
+            });
+            
+            this.loadModerationLogs(filters);
+        });
+
+        // Clear filters button
+        document.getElementById('clear-filters')?.addEventListener('click', () => {
+            document.getElementById('filter-user').value = '';
+            document.getElementById('filter-action').value = '';
+            document.getElementById('filter-moderator').value = '';
+            document.getElementById('filter-hours').value = '';
+            this.loadModerationLogs();
+        });
+
+        // Enter key support for text inputs
+        ['filter-user', 'filter-moderator'].forEach(id => {
+            document.getElementById(id)?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('apply-filters').click();
+                }
+            });
+        });
     }
 }
 

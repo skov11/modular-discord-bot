@@ -87,6 +87,66 @@
           }
         ]
       }
+    },
+
+    "moderation": {
+      "enabled": false,
+      "logging": {
+        "channelId": "MODERATION_LOG_CHANNEL_ID"
+      },
+      "roles": {
+        "moderatorRoleIds": ["MODERATOR_ROLE_ID_1", "MODERATOR_ROLE_ID_2"]
+      },
+      "actions": {
+        "timeout": true,
+        "kick": true,
+        "ban": true,
+        "unban": true,
+        "warn": true,
+        "slowmode": true,
+        "addrole": true,
+        "removerole": true,
+        "nickname": true,
+        "purgemsg": true,
+        "pin": true,
+        "unpin": true,
+        "userinfo": true,
+        "serverstats": true
+      },
+      "exemptRoles": [],
+      "exemptChannels": [],
+      "autoModeration": {
+        "enabled": false,
+        "spam": {
+          "enabled": true,
+          "maxMessages": 5,
+          "timeWindow": 10,
+          "action": "timeout",
+          "duration": 300,
+          "exemptRoles": []
+        },
+        "caps": {
+          "enabled": true,
+          "threshold": 70,
+          "minLength": 10,
+          "action": "warn",
+          "exemptRoles": []
+        },
+        "links": {
+          "enabled": false,
+          "whitelist": ["discord.gg", "youtube.com", "github.com"],
+          "action": "delete",
+          "exemptRoles": []
+        },
+        "profanity": {
+          "enabled": false,
+          "customWords": ["word1", "word2"],
+          "action": "warn",
+          "exemptRoles": []
+        },
+        "exemptRoles": ["MODERATOR_ROLE_ID", "TRUSTED_ROLE_ID"],
+        "exemptChannels": ["EXEMPT_CHANNEL_ID"]
+      }
     }
   }
 }
