@@ -358,12 +358,32 @@ class UIServer {
         return plugins;
     }
 
-    restartBot() {
+    async restartBot() {
         if (this.botInstance) {
             console.log('[UI] Bot restart requested via UI');
-            // In a real implementation, this would restart the bot
-            // For now, we'll just log the request
-            this.notifyBotRestart();
+            try {
+                // Notify clients that restart is starting
+                this.notifyBotRestart();
+                
+                // Stop the bot first
+                console.log('[UI] Stopping bot...');
+                await this.botInstance.stop();
+                
+                // Wait a moment before restarting
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Start the bot again
+                console.log('[UI] Starting bot...');
+                await this.botInstance.start();
+                
+                // Notify clients that restart is complete
+                this.notifyBotRestartComplete();
+                
+                console.log('[UI] Bot restarted successfully');
+            } catch (error) {
+                console.error('[UI] Failed to restart bot:', error);
+                this.notifyBotRestartError(error.message);
+            }
         } else {
             console.log('[UI] No bot instance available for restart');
         }
@@ -376,7 +396,36 @@ class UIServer {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({
                     type: 'botRestart',
+                    status: 'starting',
                     message: 'Bot restart initiated'
+                }));
+            }
+        });
+    }
+
+    notifyBotRestartComplete() {
+        if (!this.wss) return;
+        
+        this.wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'botRestart',
+                    status: 'complete',
+                    message: 'Bot restarted successfully'
+                }));
+            }
+        });
+    }
+
+    notifyBotRestartError(errorMessage) {
+        if (!this.wss) return;
+        
+        this.wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    type: 'botRestart',
+                    status: 'error',
+                    message: `Bot restart failed: ${errorMessage}`
                 }));
             }
         });
