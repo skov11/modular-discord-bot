@@ -169,16 +169,26 @@ class BotDashboard {
                 this.updateModerationExemptRolesSelection();
             } else if (e.target.classList.contains('moderation-exempt-channel-checkbox')) {
                 this.updateModerationExemptChannelsSelection();
+            } else if (e.target.classList.contains('auto-kick-subject-role-checkbox')) {
+                this.updateAutoKickSubjectRolesSelection();
+            } else if (e.target.classList.contains('auto-kick-exempt-role-checkbox')) {
+                this.updateAutoKickExemptRolesSelection();
             } else if (e.target.id === 'automod-enabled') {
                 this.toggleAutoModerationSettings(e.target.checked);
             }
         });
         
-        // Prevent dropdown from closing when clicking inside
+        // Prevent dropdown from closing when clicking inside checkbox areas
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.dropdown-menu') && 
-                (e.target.closest('#verification-config') || e.target.closest('#moderation-config'))) {
-                e.stopPropagation();
+            // More specific targeting - only prevent if clicking on checkbox, label, or form-check div
+            if (e.target.matches('.form-check-input[type="checkbox"]') ||
+                e.target.closest('.form-check') ||
+                e.target.matches('.form-check-label')) {
+                
+                const dropdownMenu = e.target.closest('.dropdown-menu');
+                if (dropdownMenu) {
+                    e.stopPropagation();
+                }
             }
         });
     }
@@ -424,6 +434,48 @@ class BotDashboard {
         }
     }
     
+    updateAutoKickSubjectRolesSelection() {
+        const checkboxes = document.querySelectorAll('.auto-kick-subject-role-checkbox:checked');
+        const displayText = document.getElementById('auto-kick-subject-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            if (roleId === '@norole') {
+                displayText.textContent = 'No Role (Users with no roles)';
+            } else {
+                const role = this.availableRoles.find(r => r.id === roleId);
+                displayText.textContent = role ? role.name : '1 role selected';
+            }
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+    
+    updateAutoKickExemptRolesSelection() {
+        const checkboxes = document.querySelectorAll('.auto-kick-exempt-role-checkbox:checked');
+        const displayText = document.getElementById('auto-kick-exempt-roles-text');
+        
+        if (!displayText) return;
+        
+        if (checkboxes.length === 0) {
+            displayText.textContent = 'Select roles...';
+        } else if (checkboxes.length === 1) {
+            const roleId = checkboxes[0].value;
+            if (roleId === '@norole') {
+                displayText.textContent = 'No Role (Users with no roles)';
+            } else {
+                const role = this.availableRoles.find(r => r.id === roleId);
+                displayText.textContent = role ? role.name : '1 role selected';
+            }
+        } else {
+            displayText.textContent = `${checkboxes.length} roles selected`;
+        }
+    }
+    
     trackModifiedSection(element) {
         // Find which plugin section was modified
         const pluginSection = element.closest('[id$="-config"]');
@@ -629,6 +681,8 @@ class BotDashboard {
             this.updateProfanityExemptRolesSelection();
             this.updateModerationExemptRolesSelection();
             this.updateModerationExemptChannelsSelection();
+            this.updateAutoKickSubjectRolesSelection();
+            this.updateAutoKickExemptRolesSelection();
         }, 50);
         
         // Reset change tracking after initial population
@@ -772,7 +826,7 @@ class BotDashboard {
                             <label for="verifier-role-ids" class="form-label">Verifier Roles *</label>
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                        id="verifier-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        id="verifier-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                     <span id="verifier-roles-text">Select roles...</span>
                                 </button>
                                 <div class="dropdown-menu w-100 p-2" aria-labelledby="verifier-roles-dropdown" 
@@ -830,6 +884,132 @@ class BotDashboard {
                             <label class="form-check-label" for="debug-mode">
                                 Debug Mode
                             </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h6>Auto-Kick Settings</h6>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="auto-kick-enabled" 
+                                   ${config.settings?.autoKick?.enabled ? 'checked' : ''}>
+                            <label class="form-check-label" for="auto-kick-enabled">
+                                Enable Auto-Kick for Unverified Users
+                            </label>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="auto-kick-time" class="form-label">Time Before Kick</label>
+                                    <input type="number" class="form-control" id="auto-kick-time" 
+                                           value="${config.settings?.autoKick?.time || 24}" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="auto-kick-unit" class="form-label">Time Unit</label>
+                                    <select class="form-select" id="auto-kick-unit">
+                                        <option value="minutes" ${config.settings?.autoKick?.unit === 'minutes' ? 'selected' : ''}>Minutes</option>
+                                        <option value="hours" ${config.settings?.autoKick?.unit === 'hours' || !config.settings?.autoKick?.unit ? 'selected' : ''}>Hours</option>
+                                        <option value="days" ${config.settings?.autoKick?.unit === 'days' ? 'selected' : ''}>Days</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="auto-kick-subject-roles" class="form-label">Roles Subject to Auto-Kick</label>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                id="auto-kick-subject-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
+                                            <span id="auto-kick-subject-roles-text">Select roles...</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="auto-kick-subject-roles-dropdown" 
+                                             style="max-height: 300px; overflow-y: auto;">
+                                            <div class="form-check">
+                                                <input class="form-check-input auto-kick-subject-role-checkbox" type="checkbox" 
+                                                       value="@norole" id="auto-kick-subject-norole"
+                                                       ${config.settings?.autoKick?.subjectRoles?.includes('@norole') ? 'checked' : ''}>
+                                                <label class="form-check-label d-flex align-items-center" for="auto-kick-subject-norole">
+                                                    <span class="role-color-dot me-2" style="background-color: #808080; 
+                                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                    <em>No Role (Users with no roles)</em>
+                                                </label>
+                                            </div>
+                                            <hr class="my-2">
+                                            ${this.availableRoles.map(role => 
+                                                `<div class="form-check">
+                                                    <input class="form-check-input auto-kick-subject-role-checkbox" type="checkbox" 
+                                                           value="${role.id}" id="auto-kick-subject-${role.id}"
+                                                           ${config.settings?.autoKick?.subjectRoles?.includes(role.id) ? 'checked' : ''}>
+                                                    <label class="form-check-label d-flex align-items-center" for="auto-kick-subject-${role.id}">
+                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                    </label>
+                                                </div>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
+                                    <select class="form-select d-none" id="auto-kick-subject-roles" multiple>
+                                        <option value="@norole" ${config.settings?.autoKick?.subjectRoles?.includes('@norole') ? 'selected' : ''}>No Role</option>
+                                        ${this.availableRoles.map(role => 
+                                            `<option value="${role.id}" ${config.settings?.autoKick?.subjectRoles?.includes(role.id) ? 'selected' : ''}>
+                                                ${role.name}
+                                            </option>`
+                                        ).join('')}
+                                    </select>
+                                    <div class="form-text">Users with these roles will be kicked if not verified</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="auto-kick-exempt-roles" class="form-label">Roles Exempt from Auto-Kick</label>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                                                id="auto-kick-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
+                                            <span id="auto-kick-exempt-roles-text">Select roles...</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="auto-kick-exempt-roles-dropdown" 
+                                             style="max-height: 300px; overflow-y: auto;">
+                                            <div class="form-check">
+                                                <input class="form-check-input auto-kick-exempt-role-checkbox" type="checkbox" 
+                                                       value="@norole" id="auto-kick-exempt-norole"
+                                                       ${config.settings?.autoKick?.exemptRoles?.includes('@norole') ? 'checked' : ''}>
+                                                <label class="form-check-label d-flex align-items-center" for="auto-kick-exempt-norole">
+                                                    <span class="role-color-dot me-2" style="background-color: #808080; 
+                                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                    <em>No Role (Users with no roles)</em>
+                                                </label>
+                                            </div>
+                                            <hr class="my-2">
+                                            ${this.availableRoles.map(role => 
+                                                `<div class="form-check">
+                                                    <input class="form-check-input auto-kick-exempt-role-checkbox" type="checkbox" 
+                                                           value="${role.id}" id="auto-kick-exempt-${role.id}"
+                                                           ${config.settings?.autoKick?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                    <label class="form-check-label d-flex align-items-center" for="auto-kick-exempt-${role.id}">
+                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                                    </label>
+                                                </div>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
+                                    <select class="form-select d-none" id="auto-kick-exempt-roles" multiple>
+                                        <option value="@norole" ${config.settings?.autoKick?.exemptRoles?.includes('@norole') ? 'selected' : ''}>No Role</option>
+                                        ${this.availableRoles.map(role => 
+                                            `<option value="${role.id}" ${config.settings?.autoKick?.exemptRoles?.includes(role.id) ? 'selected' : ''}>
+                                                ${role.name}
+                                            </option>`
+                                        ).join('')}
+                                    </select>
+                                    <div class="form-text">Users with these roles will never be auto-kicked</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -971,7 +1151,7 @@ class BotDashboard {
                                 <label for="moderator-role-ids" class="form-label">Moderator Roles</label>
                                 <div class="dropdown">
                                     <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                            id="moderator-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            id="moderator-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                         <span id="moderator-roles-text">Select roles...</span>
                                     </button>
                                     <div class="dropdown-menu w-100 p-2" aria-labelledby="moderator-roles-dropdown" 
@@ -1120,23 +1300,22 @@ class BotDashboard {
                                     <label class="form-label">Exempt Roles</label>
                                     <div class="dropdown">
                                         <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                id="moderation-exempt-roles-dropdown" data-bs-toggle="dropdown">
+                                                id="moderation-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                             <span id="moderation-exempt-roles-text">Select roles...</span>
                                         </button>
                                         <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
-                                            ${this.availableRoles.map(role => {
-                                                const isChecked = config.exemptRoles?.includes(role.id) ? 'checked' : '';
-                                                const roleColor = role.color ? `color: #${role.color.toString(16).padStart(6, '0')};` : '';
-                                                const botBadge = role.managed ? '<span class="badge bg-info ms-1">BOT</span>' : '';
-                                                return `
-                                                    <label class="dropdown-item-text d-flex align-items-center">
-                                                        <input type="checkbox" class="form-check-input me-2 moderation-exempt-role-checkbox" 
-                                                               value="${role.id}" ${isChecked}>
-                                                        <span style="${roleColor}">${role.name}</span>
-                                                        ${botBadge}
+                                            ${this.availableRoles.map(role => 
+                                                `<div class="form-check">
+                                                    <input class="form-check-input moderation-exempt-role-checkbox" type="checkbox" 
+                                                           value="${role.id}" id="moderation-exempt-${role.id}"
+                                                           ${config.exemptRoles?.includes(role.id) ? 'checked' : ''}>
+                                                    <label class="form-check-label d-flex align-items-center" for="moderation-exempt-${role.id}">
+                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
                                                     </label>
-                                                `;
-                                            }).join('')}
+                                                </div>`
+                                            ).join('')}
                                         </div>
                                     </div>
                                     <select id="moderation-exempt-roles" multiple style="display: none;">
@@ -1149,21 +1328,20 @@ class BotDashboard {
                                     <label class="form-label">Exempt Channels</label>
                                     <div class="dropdown">
                                         <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                id="moderation-exempt-channels-dropdown" data-bs-toggle="dropdown">
+                                                id="moderation-exempt-channels-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                             <span id="moderation-exempt-channels-text">Select channels...</span>
                                         </button>
                                         <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
-                                            ${this.availableChannels.map(channel => {
-                                                const isChecked = config.exemptChannels?.includes(channel.id) ? 'checked' : '';
-                                                const categoryPrefix = channel.category ? `${channel.category} / ` : '';
-                                                return `
-                                                    <label class="dropdown-item-text d-flex align-items-center">
-                                                        <input type="checkbox" class="form-check-input me-2 moderation-exempt-channel-checkbox" 
-                                                               value="${channel.id}" ${isChecked}>
-                                                        <span>${categoryPrefix}#${channel.name}</span>
+                                            ${this.availableChannels.map(channel => 
+                                                `<div class="form-check">
+                                                    <input class="form-check-input moderation-exempt-channel-checkbox" type="checkbox" 
+                                                           value="${channel.id}" id="moderation-exempt-channel-${channel.id}"
+                                                           ${config.exemptChannels?.includes(channel.id) ? 'checked' : ''}>
+                                                    <label class="form-check-label" for="moderation-exempt-channel-${channel.id}">
+                                                        ${channel.category ? `${channel.category} / ` : ''}#${channel.name}
                                                     </label>
-                                                `;
-                                            }).join('')}
+                                                </div>`
+                                            ).join('')}
                                         </div>
                                     </div>
                                     <select id="moderation-exempt-channels" multiple style="display: none;">
@@ -1228,7 +1406,7 @@ class BotDashboard {
                                                     <label for="spam-exempt-roles" class="form-label">Exempt Roles</label>
                                                     <div class="dropdown">
                                                         <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                                id="spam-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                id="spam-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                                             <span id="spam-exempt-roles-text">Select roles...</span>
                                                         </button>
                                                         <div class="dropdown-menu w-100 p-2" aria-labelledby="spam-exempt-roles-dropdown" 
@@ -1285,7 +1463,7 @@ class BotDashboard {
                                                     <label for="caps-exempt-roles" class="form-label">Exempt Roles</label>
                                                     <div class="dropdown">
                                                         <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                                id="caps-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                id="caps-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                                             <span id="caps-exempt-roles-text">Select roles...</span>
                                                         </button>
                                                         <div class="dropdown-menu w-100 p-2" aria-labelledby="caps-exempt-roles-dropdown" 
@@ -1340,7 +1518,7 @@ class BotDashboard {
                                                     <label for="links-exempt-roles" class="form-label">Exempt Roles</label>
                                                     <div class="dropdown">
                                                         <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                                id="links-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                id="links-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                                             <span id="links-exempt-roles-text">Select roles...</span>
                                                         </button>
                                                         <div class="dropdown-menu w-100 p-2" aria-labelledby="links-exempt-roles-dropdown" 
@@ -1393,7 +1571,7 @@ class BotDashboard {
                                                     <label for="profanity-exempt-roles" class="form-label">Exempt Roles</label>
                                                     <div class="dropdown">
                                                         <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                                id="profanity-exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                id="profanity-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                                             <span id="profanity-exempt-roles-text">Select roles...</span>
                                                         </button>
                                                         <div class="dropdown-menu w-100 p-2" aria-labelledby="profanity-exempt-roles-dropdown" 
@@ -1430,7 +1608,7 @@ class BotDashboard {
                                                         <label for="exempt-roles" class="form-label">Exempt Roles</label>
                                                         <div class="dropdown">
                                                             <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                                    id="exempt-roles-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    id="exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                                                 <span id="exempt-roles-text">Select roles...</span>
                                                             </button>
                                                             <div class="dropdown-menu w-100 p-2" aria-labelledby="exempt-roles-dropdown" 
@@ -1462,7 +1640,7 @@ class BotDashboard {
                                                         <label for="exempt-channels" class="form-label">Exempt Channels</label>
                                                         <div class="dropdown">
                                                             <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                                    id="exempt-channels-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    id="exempt-channels-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                                                 <span id="exempt-channels-text">Select channels...</span>
                                                             </button>
                                                             <div class="dropdown-menu w-100 p-2" aria-labelledby="exempt-channels-dropdown" 
@@ -1592,6 +1770,24 @@ class BotDashboard {
             this.config.plugins.verification.settings.screenshotCount = parseInt(document.getElementById('screenshot-count')?.value);
             this.config.plugins.verification.settings.requireCharacterName = document.getElementById('require-character-name')?.checked !== false;
             this.config.plugins.verification.settings.requireGuildName = document.getElementById('require-guild-name')?.checked !== false;
+            
+            // Update auto-kick settings
+            if (!this.config.plugins.verification.settings.autoKick) {
+                this.config.plugins.verification.settings.autoKick = {};
+            }
+            this.config.plugins.verification.settings.autoKick.enabled = document.getElementById('auto-kick-enabled')?.checked || false;
+            this.config.plugins.verification.settings.autoKick.time = parseInt(document.getElementById('auto-kick-time')?.value) || 24;
+            this.config.plugins.verification.settings.autoKick.unit = document.getElementById('auto-kick-unit')?.value || 'hours';
+            
+            // Update auto-kick subject roles
+            this.config.plugins.verification.settings.autoKick.subjectRoles = 
+                Array.from(document.querySelectorAll('.auto-kick-subject-role-checkbox:checked'))
+                    .map(cb => cb.value);
+            
+            // Update auto-kick exempt roles
+            this.config.plugins.verification.settings.autoKick.exemptRoles = 
+                Array.from(document.querySelectorAll('.auto-kick-exempt-role-checkbox:checked'))
+                    .map(cb => cb.value);
         }
         
         // Update purge plugin (preserve existing settings)
@@ -1985,7 +2181,7 @@ class BotDashboard {
                                 <label class="form-label">Channels</label>
                                 <div class="dropdown">
                                     <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                            id="schedule-${index}-channels-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            id="schedule-${index}-channels-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                                         <span id="schedule-${index}-channels-text">
                                             ${selectedChannels.length > 0 ? `${selectedChannels.length} channel(s) selected` : 'Select channels...'}
                                         </span>

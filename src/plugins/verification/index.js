@@ -8,6 +8,8 @@ class VerificationPlugin extends Plugin {
         super(client, config);
         this.deniedUsers = new Set();
         this.flatConfig = this.flattenConfig(config);
+        this.unverifiedUsers = new Map(); // Track unverified users
+        this.autoKickInterval = null;
     }
 
     flattenConfig(config) {
@@ -25,6 +27,10 @@ class VerificationPlugin extends Plugin {
         }
         if (config.settings) {
             Object.assign(flat, config.settings);
+            // Preserve the autoKick object structure
+            if (config.settings.autoKick) {
+                flat.autoKick = config.settings.autoKick;
+            }
         }
         
         return flat;
@@ -34,6 +40,7 @@ class VerificationPlugin extends Plugin {
         this.validateConfig();
         this.registerVerifyCommand();
         this.setupEventHandlers();
+        this.setupAutoKick();
         this.log('Verification plugin loaded');
     }
 
@@ -69,9 +76,24 @@ class VerificationPlugin extends Plugin {
 
         // Log configuration summary
         this.log(`Configuration: screenshots=${screenshotCount || 0}, character=${this.flatConfig.requireCharacterName}, guild=${this.flatConfig.requireGuildName}`, 'info');
+        
+        // Log auto-kick configuration
+        if (this.flatConfig.autoKick?.enabled) {
+            const subjectRoles = this.flatConfig.autoKick.subjectRoles || [];
+            const exemptRoles = this.flatConfig.autoKick.exemptRoles || [];
+            const hasNoRoleSubject = subjectRoles.includes('@norole');
+            const hasNoRoleExempt = exemptRoles.includes('@norole');
+            
+            let logMessage = `Auto-kick: ${this.flatConfig.autoKick.time} ${this.flatConfig.autoKick.unit}`;
+            logMessage += `, Subject roles: ${subjectRoles.length}${hasNoRoleSubject ? ' (incl. no-role)' : ''}`;
+            logMessage += `, Exempt roles: ${exemptRoles.length}${hasNoRoleExempt ? ' (incl. no-role)' : ''}`;
+            
+            this.log(logMessage, 'info');
+        }
     }
 
     async unload() {
+        this.cleanupAutoKick();
         this.log('Verification plugin unloaded');
     }
 
@@ -124,6 +146,9 @@ class VerificationPlugin extends Plugin {
     setupEventHandlers() {
         this.client.on('messageCreate', (message) => this.handleMessageCreate(message));
         this.client.on('interactionCreate', (interaction) => this.handleInteractionCreate(interaction));
+        this.client.on('guildMemberAdd', (member) => this.handleMemberJoin(member));
+        this.client.on('guildMemberUpdate', (oldMember, newMember) => this.handleMemberUpdate(oldMember, newMember));
+        this.client.on('guildMemberRemove', (member) => this.handleMemberLeave(member));
     }
 
     async handleVerifyCommand(interaction) {
@@ -482,6 +507,228 @@ class VerificationPlugin extends Plugin {
             this.client.channels.fetch(this.flatConfig.logChannelId)
                 .then(channel => channel.send(`❌ <@${interaction.user.id}> denied verification for <@${userId}>. Reason: ${reason}`))
                 .catch(() => {});
+        }
+    }
+
+    // Auto-kick functionality
+    setupAutoKick() {
+        if (!this.flatConfig.autoKick?.enabled) {
+            this.log('Auto-kick is disabled');
+            return;
+        }
+
+        // Wait for client to be ready before initializing
+        if (this.client.isReady()) {
+            this.initializeAutoKickNow();
+        } else {
+            this.client.once('ready', () => {
+                this.initializeAutoKickNow();
+            });
+        }
+
+        this.log(`Auto-kick enabled: ${this.flatConfig.autoKick.time} ${this.flatConfig.autoKick.unit}`);
+    }
+
+    initializeAutoKickNow() {
+        this.log('Initializing auto-kick system now...', 'debug');
+        
+        // Initialize unverified users tracking
+        this.initializeUnverifiedUsers();
+
+        // Set up interval to check for users to kick
+        const checkInterval = 60000; // Check every minute
+        this.autoKickInterval = setInterval(() => {
+            this.checkAndKickUnverifiedUsers();
+        }, checkInterval);
+        
+        this.log('Auto-kick interval timer started', 'debug');
+    }
+
+    cleanupAutoKick() {
+        if (this.autoKickInterval) {
+            clearInterval(this.autoKickInterval);
+            this.autoKickInterval = null;
+        }
+        this.unverifiedUsers.clear();
+    }
+
+    async initializeUnverifiedUsers() {
+        try {
+            // Get the first (and likely only) guild the bot is connected to
+            const guild = this.client.guilds.cache.first();
+            if (!guild) {
+                this.log('Could not find guild for auto-kick initialization', 'error');
+                return;
+            }
+
+            // Fetch all members
+            await guild.members.fetch();
+
+            // Track unverified members
+            guild.members.cache.forEach(member => {
+                if (this.shouldTrackForAutoKick(member)) {
+                    this.unverifiedUsers.set(member.id, Date.now());
+                    this.log(`Tracking unverified user: ${member.displayName || member.user.username}`, 'debug');
+                }
+            });
+
+            this.log(`Initialized auto-kick tracking for ${this.unverifiedUsers.size} unverified users`);
+        } catch (error) {
+            this.log(`Error initializing unverified users: ${error.message}`, 'error');
+        }
+    }
+
+    shouldTrackForAutoKick(member) {
+        // Don't track bots
+        if (member.user.bot) return false;
+
+        // Check if member has verified role
+        if (this.flatConfig.verifiedRoleId && member.roles.cache.has(this.flatConfig.verifiedRoleId)) {
+            return false;
+        }
+
+        // Check if member has any exempt roles or is exempt due to having no roles
+        const exemptRoles = this.flatConfig.autoKick?.exemptRoles || [];
+        const hasNoRoles = member.roles.cache.size === 1; // Only @everyone role
+        
+        // Check for @norole exemption
+        if (exemptRoles.includes('@norole') && hasNoRoles) {
+            return false;
+        }
+        
+        // Check for specific role exemptions
+        if (exemptRoles.some(roleId => roleId !== '@norole' && member.roles.cache.has(roleId))) {
+            return false;
+        }
+
+        // Check if member has any subject roles (if configured)
+        const subjectRoles = this.flatConfig.autoKick?.subjectRoles || [];
+        if (subjectRoles.length > 0) {
+            // Check for @norole subject
+            if (subjectRoles.includes('@norole') && hasNoRoles) {
+                return true;
+            }
+            
+            // Check for specific role subjects
+            return subjectRoles.some(roleId => roleId !== '@norole' && member.roles.cache.has(roleId));
+        }
+
+        // If no subject roles configured, track all non-verified, non-exempt users
+        return true;
+    }
+
+    handleMemberJoin(member) {
+        if (!this.flatConfig.autoKick?.enabled) return;
+
+        if (this.shouldTrackForAutoKick(member)) {
+            this.unverifiedUsers.set(member.id, Date.now());
+            this.log(`Started tracking new member for auto-kick: ${member.displayName || member.user.username}`, 'debug');
+        }
+    }
+
+    handleMemberUpdate(oldMember, newMember) {
+        if (!this.flatConfig.autoKick?.enabled) return;
+
+        // Check if member got verified
+        const wasUnverified = !oldMember.roles.cache.has(this.flatConfig.verifiedRoleId);
+        const isNowVerified = newMember.roles.cache.has(this.flatConfig.verifiedRoleId);
+
+        if (wasUnverified && isNowVerified && this.unverifiedUsers.has(newMember.id)) {
+            this.unverifiedUsers.delete(newMember.id);
+            this.log(`Removed ${newMember.displayName || newMember.user.username} from auto-kick tracking (verified)`, 'debug');
+        } else if (!wasUnverified && !isNowVerified && this.shouldTrackForAutoKick(newMember)) {
+            // Member lost verified role
+            this.unverifiedUsers.set(newMember.id, Date.now());
+            this.log(`Started tracking ${newMember.displayName || newMember.user.username} for auto-kick (unverified)`, 'debug');
+        }
+    }
+
+    handleMemberLeave(member) {
+        if (this.unverifiedUsers.has(member.id)) {
+            this.unverifiedUsers.delete(member.id);
+            this.log(`Removed ${member.displayName || member.user.username} from auto-kick tracking (left server)`, 'debug');
+        }
+    }
+
+    async checkAndKickUnverifiedUsers() {
+        if (!this.flatConfig.autoKick?.enabled) return;
+
+        this.log(`Checking ${this.unverifiedUsers.size} unverified users for auto-kick...`, 'debug');
+
+        const kickTime = this.getKickTimeInMs();
+        const now = Date.now();
+        const usersToKick = [];
+
+        // Find users who have exceeded the time limit
+        for (const [userId, joinTime] of this.unverifiedUsers.entries()) {
+            const timeElapsed = now - joinTime;
+            this.log(`User ${userId}: ${Math.floor(timeElapsed / 1000)}s elapsed, needs ${Math.floor(kickTime / 1000)}s`, 'debug');
+            if (timeElapsed >= kickTime) {
+                usersToKick.push(userId);
+            }
+        }
+
+        this.log(`Found ${usersToKick.length} users to kick`, 'debug');
+        if (usersToKick.length === 0) return;
+
+        const guild = this.client.guilds.cache.first();
+        if (!guild) return;
+
+        // Kick users
+        for (const userId of usersToKick) {
+            try {
+                const member = await guild.members.fetch(userId).catch(() => null);
+                if (!member) {
+                    this.unverifiedUsers.delete(userId);
+                    continue;
+                }
+
+                // Double-check they should still be kicked
+                if (!this.shouldTrackForAutoKick(member)) {
+                    this.unverifiedUsers.delete(userId);
+                    continue;
+                }
+
+                // Send DM before kicking
+                try {
+                    await member.send(`You have been removed from ${guild.name} for not completing verification within ${this.flatConfig.autoKick.time} ${this.flatConfig.autoKick.unit}. You may rejoin and verify when you're ready.`);
+                } catch (dmError) {
+                    this.log(`Failed to DM user before auto-kick: ${dmError.message}`, 'debug');
+                }
+
+                // Kick the member
+                await member.kick(`Auto-kicked: Not verified within ${this.flatConfig.autoKick.time} ${this.flatConfig.autoKick.unit}`);
+                this.unverifiedUsers.delete(userId);
+
+                this.log(`⚠️ Auto-kicked ${member.displayName || member.user.username} for not verifying within ${this.flatConfig.autoKick.time} ${this.flatConfig.autoKick.unit}`);
+
+                // Log to Discord channel
+                if (this.flatConfig.logChannelId) {
+                    const logChannel = await this.client.channels.fetch(this.flatConfig.logChannelId).catch(() => null);
+                    if (logChannel) {
+                        await logChannel.send(`⚠️ Auto-kicked <@${userId}> for not verifying within ${this.flatConfig.autoKick.time} ${this.flatConfig.autoKick.unit}`);
+                    }
+                }
+            } catch (error) {
+                this.log(`Error auto-kicking user ${userId}: ${error.message}`, 'error');
+                this.unverifiedUsers.delete(userId);
+            }
+        }
+    }
+
+    getKickTimeInMs() {
+        const time = this.flatConfig.autoKick?.time || 24;
+        const unit = this.flatConfig.autoKick?.unit || 'hours';
+
+        switch (unit) {
+            case 'minutes':
+                return time * 60 * 1000;
+            case 'hours':
+                return time * 60 * 60 * 1000;
+            case 'days':
+                return time * 24 * 60 * 60 * 1000;
+            default:
+                return 24 * 60 * 60 * 1000; // Default to 24 hours
         }
     }
 

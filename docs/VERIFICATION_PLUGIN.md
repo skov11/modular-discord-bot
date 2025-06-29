@@ -22,6 +22,7 @@ A comprehensive user verification system for Discord servers with configurable s
 - **Comprehensive Logging**: Records verification events to both file system and Discord channels
 - **Hot-Configuration**: All verification settings can be changed through the web UI without restart
 - **Visual Interface**: Channel and role dropdowns with color indicators and organized by category
+- **Auto-Kick System**: Automatically remove unverified users after configurable time period
 
 ## Configuration
 
@@ -49,7 +50,14 @@ A comprehensive user verification system for Discord servers with configurable s
       "debugMode": true,
       "screenshotCount": 2,
       "requireCharacterName": true,
-      "requireGuildName": true
+      "requireGuildName": true,
+      "autoKick": {
+        "enabled": false,
+        "time": 24,
+        "unit": "hours",
+        "subjectRoles": [],
+        "exemptRoles": []
+      }
     }
   }
 }
@@ -67,6 +75,14 @@ A comprehensive user verification system for Discord servers with configurable s
 
 - `requireCharacterName` - Whether character name is required (default: `true`)
 - `requireGuildName` - Whether guild name is required (default: `true`)
+
+#### Auto-Kick Settings
+
+- `enabled` - Enable automatic removal of unverified users
+- `time` - Number of time units before kicking (default: `24`)
+- `unit` - Time unit: `"minutes"`, `"hours"`, or `"days"` (default: `"hours"`)
+- `subjectRoles` - Array of role IDs that are subject to auto-kick (empty = all unverified users). Use `"@norole"` to include users with no roles
+- `exemptRoles` - Array of role IDs that are exempt from auto-kick. Use `"@norole"` to exempt users with no roles
 
 #### Example Configurations
 
@@ -94,6 +110,38 @@ A comprehensive user verification system for Discord servers with configurable s
   "screenshotCount": 1,
   "requireCharacterName": true,
   "requireGuildName": false
+}
+```
+
+**Auto-kick enabled for specific roles:**
+```json
+"settings": {
+  "screenshotCount": 2,
+  "requireCharacterName": true,
+  "requireGuildName": true,
+  "autoKick": {
+    "enabled": true,
+    "time": 48,
+    "unit": "hours",
+    "subjectRoles": ["new_member_role_id"],
+    "exemptRoles": ["vip_role_id", "booster_role_id"]
+  }
+}
+```
+
+**Auto-kick for users with no roles, exempt VIPs:**
+```json
+"settings": {
+  "screenshotCount": 1,
+  "requireCharacterName": true,
+  "requireGuildName": false,
+  "autoKick": {
+    "enabled": true,
+    "time": 24,
+    "unit": "hours",
+    "subjectRoles": ["@norole"],
+    "exemptRoles": ["vip_role_id"]
+  }
 }
 ```
 
@@ -126,6 +174,94 @@ A comprehensive user verification system for Discord servers with configurable s
 - JPEG/JPG (.jpg, .jpeg)
 - GIF (.gif)
 - WebP (.webp)
+
+## Auto-Kick Feature
+
+### Overview
+
+The auto-kick feature automatically removes unverified users from the server after a specified time period. This helps maintain server security and ensures only active, verified members remain in the community.
+
+### How It Works
+
+1. **User Tracking**: When enabled, the bot tracks all unverified users who join the server
+2. **Timer**: Each user has a countdown timer based on the configured time settings
+3. **Role Checking**: The bot checks if users have the verified role or any exempt roles
+4. **Automatic Removal**: Users who exceed the time limit without verifying are automatically kicked
+5. **DM Notification**: Before kicking, the bot attempts to send a DM explaining the removal
+6. **Logging**: All auto-kicks are logged to the configured log channel
+
+### Configuration Options
+
+- **Subject Roles**: Leave empty to track all unverified users, or specify roles that should be subject to auto-kick. Use "No Role" option to specifically target users with no roles assigned
+- **Exempt Roles**: Users with these roles will never be auto-kicked (useful for VIPs, boosters, etc.). Use "No Role" option to exempt users with no roles assigned
+- **Time Settings**: Configure delay in minutes, hours, or days
+
+### Example Scenarios
+
+**Scenario 1: Kick all unverified users after 24 hours**
+```json
+"autoKick": {
+  "enabled": true,
+  "time": 24,
+  "unit": "hours",
+  "subjectRoles": [],
+  "exemptRoles": []
+}
+```
+
+**Scenario 2: Only kick users with "New Member" role, exempt VIPs**
+```json
+"autoKick": {
+  "enabled": true,
+  "time": 7,
+  "unit": "days",
+  "subjectRoles": ["new_member_role_id"],
+  "exemptRoles": ["vip_role_id", "booster_role_id"]
+}
+```
+
+**Scenario 3: Quick verification requirement (30 minutes)**
+```json
+"autoKick": {
+  "enabled": true,
+  "time": 30,
+  "unit": "minutes",
+  "subjectRoles": [],
+  "exemptRoles": ["staff_role_id"]
+}
+```
+
+**Scenario 4: Only kick users with no roles, exempt boosters**
+```json
+"autoKick": {
+  "enabled": true,
+  "time": 12,
+  "unit": "hours",
+  "subjectRoles": ["@norole"],
+  "exemptRoles": ["booster_role_id"]
+}
+```
+
+**Scenario 5: Kick new members and no-role users, but exempt admins and no-role users (contradictory example)**
+```json
+"autoKick": {
+  "enabled": true,
+  "time": 3,
+  "unit": "days",
+  "subjectRoles": ["new_member_role_id", "@norole"],
+  "exemptRoles": ["admin_role_id", "@norole"]
+}
+```
+*Note: In this case, users with no roles would be exempt since exemptions take priority over subjects.*
+
+### Important Notes
+
+- Users can rejoin the server after being kicked and will have another chance to verify
+- The timer starts when a user joins the server or when the feature is enabled
+- If a user gains the verified role, they are immediately removed from auto-kick tracking
+- The bot checks for users to kick every minute
+- **No Role handling**: Users with only the @everyone role are considered to have "no roles". The special `"@norole"` value can be used in subject/exempt role configurations
+- **Priority**: Exempt roles always take priority over subject roles - if a user qualifies for both, they will be exempt
 
 ## Auto-Moderation Features
 
@@ -168,6 +304,7 @@ All verification events are logged with `[VERIFICATION]` prefix:
 - 💌 DM delivery status (success/failure)
 - 🔍 Debug information (when debug mode enabled)
 - ⚠️ Configuration warnings and errors
+- ⚠️ Auto-kick events and tracking updates
 
 ### Discord Channel Logging
 
@@ -175,6 +312,7 @@ Only specific events are sent to the Discord log channel:
 - ✅ **Verification approvals**: `AdminName verified UserName at [timestamp]`
 - ❌ **Verification denials**: `@Admin denied verification for @User. Reason: [reason]`
 - ⚠️ **DM delivery failures**: `Failed to send denial DM to @User - user may have DMs disabled`
+- ⚠️ **Auto-kick events**: `Auto-kicked @User for not verifying within X hours/days`
 
 ## Web Interface Configuration
 
@@ -185,8 +323,12 @@ The verification plugin can be fully configured through the web dashboard:
    - Single dropdown for verified role
    - Multi-select dropdown for verifier roles with color indicators
 3. **Settings**: Screenshot count, field requirements, debug mode
-4. **Messages**: Customizable approval and denial messages
-5. **Real-time Updates**: Changes take effect immediately without restart
+4. **Auto-Kick Settings**:
+   - Enable/disable toggle
+   - Time and unit configuration
+   - Multi-select dropdowns for subject and exempt roles (includes "No Role" option)
+5. **Messages**: Customizable approval and denial messages
+6. **Real-time Updates**: Changes take effect immediately without restart
 
 ## Permissions Required
 
@@ -199,6 +341,7 @@ The verification plugin can be fully configured through the web dashboard:
 - **Manage Messages**: For auto-deletion of non-command messages
 - **Read Message History**: To process verification requests
 - **Use Application Commands**: To register and use slash commands
+- **Kick Members**: For auto-kick functionality (if enabled)
 
 ### User Permissions
 
