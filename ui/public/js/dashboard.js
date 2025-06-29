@@ -751,61 +751,39 @@ class BotDashboard {
                         <span class="badge bg-secondary">/verify</span>
                     </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="verification-enabled" 
-                           ${config.enabled !== false ? 'checked' : ''}>
-                    <label class="form-check-label" for="verification-enabled">Enabled</label>
-                </div>
+                ${this.createToggleSwitch({
+                    id: 'verification-enabled',
+                    label: 'Enabled',
+                    checked: config.enabled !== false
+                })}
             </div>
             <div class="collapse" id="verification-config">
                 <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Channels</h6>
-                        <div class="mb-3">
-                            <label for="verify-channel-id" class="form-label">Verify Channel *</label>
-                            <select class="form-select" id="verify-channel-id" required>
-                                <option value="">Select a channel...</option>
-                                ${this.availableChannels.map(channel => 
-                                    `<option value="${channel.id}" ${config.channels?.verifyChannelId === channel.id ? 'selected' : ''}>
-                                        ${channel.category} / #${channel.name}
-                                    </option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="verify-command-channel-id" class="form-label">Verify Command Channel *</label>
-                            <select class="form-select" id="verify-command-channel-id" required>
-                                <option value="">Select a channel...</option>
-                                ${this.availableChannels.map(channel => 
-                                    `<option value="${channel.id}" ${config.channels?.verifyCommandChannelId === channel.id ? 'selected' : ''}>
-                                        ${channel.category} / #${channel.name}
-                                    </option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="log-channel-id" class="form-label">Log Channel</label>
-                            <select class="form-select" id="log-channel-id">
-                                <option value="">Select a channel...</option>
-                                ${this.availableChannels.map(channel => 
-                                    `<option value="${channel.id}" ${config.channels?.logChannelId === channel.id ? 'selected' : ''}>
-                                        ${channel.category} / #${channel.name}
-                                    </option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="how-to-verify-id" class="form-label">How To Verify Channel</label>
-                            <select class="form-select" id="how-to-verify-id">
-                                <option value="">Select a channel...</option>
-                                ${this.availableChannels.map(channel => 
-                                    `<option value="${channel.id}" ${config.channels?.howToVerifyID === channel.id ? 'selected' : ''}>
-                                        ${channel.category} / #${channel.name}
-                                    </option>`
-                                ).join('')}
-                            </select>
-                        </div>
+                        ${this.createChannelSelect({
+                            id: 'verify-channel-id',
+                            label: 'Verify Channel',
+                            selectedChannelId: config.channels?.verifyChannelId,
+                            required: true
+                        })}
+                        ${this.createChannelSelect({
+                            id: 'verify-command-channel-id',
+                            label: 'Verify Command Channel',
+                            selectedChannelId: config.channels?.verifyCommandChannelId,
+                            required: true
+                        })}
+                        ${this.createChannelSelect({
+                            id: 'log-channel-id',
+                            label: 'Log Channel',
+                            selectedChannelId: config.channels?.logChannelId
+                        })}
+                        ${this.createChannelSelect({
+                            id: 'how-to-verify-id',
+                            label: 'How To Verify Channel',
+                            selectedChannelId: config.channels?.howToVerifyID
+                        })}
                     </div>
                     <div class="col-md-6">
                         <h6>Roles</h6>
@@ -822,38 +800,17 @@ class BotDashboard {
                             </select>
                             <div class="form-text">Role to assign to verified users</div>
                         </div>
-                        <div class="mb-3">
-                            <label for="verifier-role-ids" class="form-label">Verifier Roles *</label>
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                        id="verifier-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
-                                    <span id="verifier-roles-text">Select roles...</span>
-                                </button>
-                                <div class="dropdown-menu w-100 p-2" aria-labelledby="verifier-roles-dropdown" 
-                                     style="max-height: 300px; overflow-y: auto;">
-                                    ${this.availableRoles.map(role => 
-                                        `<div class="form-check">
-                                            <input class="form-check-input verifier-role-checkbox" type="checkbox" 
-                                                   value="${role.id}" id="verifier-${role.id}"
-                                                   ${config.roles?.verifierRoleIds?.includes(role.id) ? 'checked' : ''}>
-                                            <label class="form-check-label d-flex align-items-center" for="verifier-${role.id}">
-                                                <span class="role-color-dot me-2" style="background-color: ${role.color}; 
-                                                      width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
-                                                ${role.name}${role.managed ? ' (Bot Role)' : ''}
-                                            </label>
-                                        </div>`
-                                    ).join('')}
-                                </div>
-                            </div>
-                            <select class="form-select d-none" id="verifier-role-ids" multiple required>
-                                ${this.availableRoles.map(role => 
-                                    `<option value="${role.id}" ${config.roles?.verifierRoleIds?.includes(role.id) ? 'selected' : ''}>
-                                        ${role.name}
-                                    </option>`
-                                ).join('')}
-                            </select>
-                            <div class="form-text">Select roles that can approve verifications</div>
-                        </div>
+                        ${this.createRoleDropdown({
+                            id: 'verifier-roles',
+                            label: 'Verifier Roles *',
+                            selectedRoles: config.roles?.verifierRoleIds || [],
+                            includeNoRole: false,
+                            checkboxClass: 'verifier-role-checkbox',
+                            textId: 'verifier-roles-text',
+                            hiddenSelectId: 'verifier-role-ids',
+                            helpText: 'Select roles that can approve verifications',
+                            required: true
+                        })}
                         
                         <h6>Settings</h6>
                         <div class="mb-3">
@@ -864,47 +821,44 @@ class BotDashboard {
                                 <option value="2" ${config.settings?.screenshotCount == 2 || config.settings?.screenshotCount === undefined ? 'selected' : ''}>2 - Dual screenshots</option>
                             </select>
                         </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="require-character-name" 
-                                   ${config.settings?.requireCharacterName !== false ? 'checked' : ''}>
-                            <label class="form-check-label" for="require-character-name">
-                                Require Character Name
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="require-guild-name" 
-                                   ${config.settings?.requireGuildName !== false ? 'checked' : ''}>
-                            <label class="form-check-label" for="require-guild-name">
-                                Require Guild Name
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="debug-mode" 
-                                   ${config.settings?.debugMode ? 'checked' : ''}>
-                            <label class="form-check-label" for="debug-mode">
-                                Debug Mode
-                            </label>
-                        </div>
+                        ${this.createCheckboxInput({
+                            id: 'require-character-name',
+                            label: 'Require Character Name',
+                            checked: config.settings?.requireCharacterName !== false,
+                            className: 'mb-2'
+                        })}
+                        ${this.createCheckboxInput({
+                            id: 'require-guild-name',
+                            label: 'Require Guild Name',
+                            checked: config.settings?.requireGuildName !== false,
+                            className: 'mb-3'
+                        })}
+                        ${this.createCheckboxInput({
+                            id: 'debug-mode',
+                            label: 'Debug Mode',
+                            checked: config.settings?.debugMode
+                        })}
                     </div>
                 </div>
                 
                 <div class="row mt-3">
                     <div class="col-md-12">
                         <h6>Auto-Kick Settings</h6>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="auto-kick-enabled" 
-                                   ${config.settings?.autoKick?.enabled ? 'checked' : ''}>
-                            <label class="form-check-label" for="auto-kick-enabled">
-                                Enable Auto-Kick for Unverified Users
-                            </label>
-                        </div>
+                        ${this.createCheckboxInput({
+                            id: 'auto-kick-enabled',
+                            label: 'Enable Auto-Kick for Unverified Users',
+                            checked: config.settings?.autoKick?.enabled,
+                            className: 'mb-3'
+                        })}
                         <div class="row">
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="auto-kick-time" class="form-label">Time Before Kick</label>
-                                    <input type="number" class="form-control" id="auto-kick-time" 
-                                           value="${config.settings?.autoKick?.time || 24}" min="1">
-                                </div>
+                                ${this.createFormInput({
+                                    id: 'auto-kick-time',
+                                    label: 'Time Before Kick',
+                                    type: 'number',
+                                    value: config.settings?.autoKick?.time || 24,
+                                    min: 1
+                                })}
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
@@ -919,96 +873,28 @@ class BotDashboard {
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="auto-kick-subject-roles" class="form-label">Roles Subject to Auto-Kick</label>
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                id="auto-kick-subject-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
-                                            <span id="auto-kick-subject-roles-text">Select roles...</span>
-                                        </button>
-                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="auto-kick-subject-roles-dropdown" 
-                                             style="max-height: 300px; overflow-y: auto;">
-                                            <div class="form-check">
-                                                <input class="form-check-input auto-kick-subject-role-checkbox" type="checkbox" 
-                                                       value="@norole" id="auto-kick-subject-norole"
-                                                       ${config.settings?.autoKick?.subjectRoles?.includes('@norole') ? 'checked' : ''}>
-                                                <label class="form-check-label d-flex align-items-center" for="auto-kick-subject-norole">
-                                                    <span class="role-color-dot me-2" style="background-color: #808080; 
-                                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
-                                                    <em>No Role (Users with no roles)</em>
-                                                </label>
-                                            </div>
-                                            <hr class="my-2">
-                                            ${this.availableRoles.map(role => 
-                                                `<div class="form-check">
-                                                    <input class="form-check-input auto-kick-subject-role-checkbox" type="checkbox" 
-                                                           value="${role.id}" id="auto-kick-subject-${role.id}"
-                                                           ${config.settings?.autoKick?.subjectRoles?.includes(role.id) ? 'checked' : ''}>
-                                                    <label class="form-check-label d-flex align-items-center" for="auto-kick-subject-${role.id}">
-                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
-                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
-                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
-                                                    </label>
-                                                </div>`
-                                            ).join('')}
-                                        </div>
-                                    </div>
-                                    <select class="form-select d-none" id="auto-kick-subject-roles" multiple>
-                                        <option value="@norole" ${config.settings?.autoKick?.subjectRoles?.includes('@norole') ? 'selected' : ''}>No Role</option>
-                                        ${this.availableRoles.map(role => 
-                                            `<option value="${role.id}" ${config.settings?.autoKick?.subjectRoles?.includes(role.id) ? 'selected' : ''}>
-                                                ${role.name}
-                                            </option>`
-                                        ).join('')}
-                                    </select>
-                                    <div class="form-text">Users with these roles will be kicked if not verified</div>
-                                </div>
+                                ${this.createRoleDropdown({
+                                    id: 'auto-kick-subject-roles',
+                                    label: 'Roles Subject to Auto-Kick',
+                                    selectedRoles: config.settings?.autoKick?.subjectRoles || [],
+                                    includeNoRole: true,
+                                    checkboxClass: 'auto-kick-subject-role-checkbox',
+                                    textId: 'auto-kick-subject-roles-text',
+                                    hiddenSelectId: 'auto-kick-subject-roles',
+                                    helpText: 'Users with these roles will be kicked if not verified'
+                                })}
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="auto-kick-exempt-roles" class="form-label">Roles Exempt from Auto-Kick</label>
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                                id="auto-kick-exempt-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
-                                            <span id="auto-kick-exempt-roles-text">Select roles...</span>
-                                        </button>
-                                        <div class="dropdown-menu w-100 p-2" aria-labelledby="auto-kick-exempt-roles-dropdown" 
-                                             style="max-height: 300px; overflow-y: auto;">
-                                            <div class="form-check">
-                                                <input class="form-check-input auto-kick-exempt-role-checkbox" type="checkbox" 
-                                                       value="@norole" id="auto-kick-exempt-norole"
-                                                       ${config.settings?.autoKick?.exemptRoles?.includes('@norole') ? 'checked' : ''}>
-                                                <label class="form-check-label d-flex align-items-center" for="auto-kick-exempt-norole">
-                                                    <span class="role-color-dot me-2" style="background-color: #808080; 
-                                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
-                                                    <em>No Role (Users with no roles)</em>
-                                                </label>
-                                            </div>
-                                            <hr class="my-2">
-                                            ${this.availableRoles.map(role => 
-                                                `<div class="form-check">
-                                                    <input class="form-check-input auto-kick-exempt-role-checkbox" type="checkbox" 
-                                                           value="${role.id}" id="auto-kick-exempt-${role.id}"
-                                                           ${config.settings?.autoKick?.exemptRoles?.includes(role.id) ? 'checked' : ''}>
-                                                    <label class="form-check-label d-flex align-items-center" for="auto-kick-exempt-${role.id}">
-                                                        <span class="role-color-dot me-2" style="background-color: ${role.color}; 
-                                                              width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
-                                                        ${role.name}${role.managed ? ' (Bot Role)' : ''}
-                                                    </label>
-                                                </div>`
-                                            ).join('')}
-                                        </div>
-                                    </div>
-                                    <select class="form-select d-none" id="auto-kick-exempt-roles" multiple>
-                                        <option value="@norole" ${config.settings?.autoKick?.exemptRoles?.includes('@norole') ? 'selected' : ''}>No Role</option>
-                                        ${this.availableRoles.map(role => 
-                                            `<option value="${role.id}" ${config.settings?.autoKick?.exemptRoles?.includes(role.id) ? 'selected' : ''}>
-                                                ${role.name}
-                                            </option>`
-                                        ).join('')}
-                                    </select>
-                                    <div class="form-text">Users with these roles will never be auto-kicked</div>
-                                </div>
+                                ${this.createRoleDropdown({
+                                    id: 'auto-kick-exempt-roles',
+                                    label: 'Roles Exempt from Auto-Kick',
+                                    selectedRoles: config.settings?.autoKick?.exemptRoles || [],
+                                    includeNoRole: true,
+                                    checkboxClass: 'auto-kick-exempt-role-checkbox',
+                                    textId: 'auto-kick-exempt-roles-text',
+                                    hiddenSelectId: 'auto-kick-exempt-roles',
+                                    helpText: 'Users with these roles will never be auto-kicked'
+                                })}
                             </div>
                         </div>
                     </div>
@@ -1050,39 +936,32 @@ class BotDashboard {
                         <span class="badge bg-secondary">/purge</span>
                     </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="purge-enabled" 
-                           ${config.enabled !== false ? 'checked' : ''}>
-                    <label class="form-check-label" for="purge-enabled">Enabled</label>
-                </div>
+                ${this.createToggleSwitch({
+                    id: 'purge-enabled',
+                    label: 'Enabled',
+                    checked: config.enabled !== false
+                })}
             </div>
             <div class="collapse" id="purge-config">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Logging</h6>
-                            <div class="mb-3">
-                                <label for="purge-log-channel-id" class="form-label">Log Channel</label>
-                                <select class="form-select" id="purge-log-channel-id">
-                                    <option value="">Select a channel...</option>
-                                    ${this.availableChannels.map(channel => 
-                                        `<option value="${channel.id}" ${config.logging?.channelId === channel.id ? 'selected' : ''}>
-                                            ${channel.category} / #${channel.name}
-                                        </option>`
-                                    ).join('')}
-                                </select>
-                                <div class="form-text">Channel where purge actions will be logged</div>
-                            </div>
+                            ${this.createChannelSelect({
+                                id: 'purge-log-channel-id',
+                                label: 'Log Channel',
+                                selectedChannelId: config.logging?.channelId,
+                                helpText: 'Channel where purge actions will be logged'
+                            })}
                         </div>
                         <div class="col-md-6">
                             <h6>Auto-Purge</h6>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="purge-auto-enabled" 
-                                       ${config.autoPurge?.enabled ? 'checked' : ''}>
-                                <label class="form-check-label" for="purge-auto-enabled">
-                                    Enable Auto-Purge
-                                </label>
-                            </div>
+                            ${this.createCheckboxInput({
+                                id: 'purge-auto-enabled',
+                                label: 'Enable Auto-Purge',
+                                checked: config.autoPurge?.enabled,
+                                className: 'mb-3'
+                            })}
                         </div>
                     </div>
                     
@@ -1121,64 +1000,36 @@ class BotDashboard {
                         <span class="badge bg-secondary ms-1">/modtest</span>
                     </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="moderation-enabled" 
-                           ${config.enabled !== false ? 'checked' : ''}>
-                    <label class="form-check-label" for="moderation-enabled">Enabled</label>
-                </div>
+                ${this.createToggleSwitch({
+                    id: 'moderation-enabled',
+                    label: 'Enabled',
+                    checked: config.enabled !== false
+                })}
             </div>
             <div class="collapse" id="moderation-config">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Logging</h6>
-                            <div class="mb-3">
-                                <label for="moderation-log-channel-id" class="form-label">Log Channel</label>
-                                <select class="form-select" id="moderation-log-channel-id">
-                                    <option value="">Select a channel...</option>
-                                    ${this.availableChannels.map(channel => 
-                                        `<option value="${channel.id}" ${config.logging?.channelId === channel.id ? 'selected' : ''}>
-                                            ${channel.category} / #${channel.name}
-                                        </option>`
-                                    ).join('')}
-                                </select>
-                                <div class="form-text">Channel where moderation actions will be logged</div>
-                            </div>
+                            ${this.createChannelSelect({
+                                id: 'moderation-log-channel-id',
+                                label: 'Log Channel',
+                                selectedChannelId: config.logging?.channelId,
+                                helpText: 'Channel where moderation actions will be logged'
+                            })}
                         </div>
                         <div class="col-md-6">
                             <h6>Permissions</h6>
-                            <div class="mb-3">
-                                <label for="moderator-role-ids" class="form-label">Moderator Roles</label>
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
-                                            id="moderator-roles-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
-                                        <span id="moderator-roles-text">Select roles...</span>
-                                    </button>
-                                    <div class="dropdown-menu w-100 p-2" aria-labelledby="moderator-roles-dropdown" 
-                                         style="max-height: 300px; overflow-y: auto;">
-                                        ${this.availableRoles.map(role => 
-                                            `<div class="form-check">
-                                                <input class="form-check-input moderator-role-checkbox" type="checkbox" 
-                                                       value="${role.id}" id="moderator-${role.id}"
-                                                       ${config.roles?.moderatorRoleIds?.includes(role.id) ? 'checked' : ''}>
-                                                <label class="form-check-label d-flex align-items-center" for="moderator-${role.id}">
-                                                    <span class="role-color-dot me-2" style="background-color: ${role.color}; 
-                                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
-                                                    ${role.name}${role.managed ? ' (Bot Role)' : ''}
-                                                </label>
-                                            </div>`
-                                        ).join('')}
-                                    </div>
-                                </div>
-                                <select class="form-select d-none" id="moderator-role-ids" multiple>
-                                    ${this.availableRoles.map(role => 
-                                        `<option value="${role.id}" ${config.roles?.moderatorRoleIds?.includes(role.id) ? 'selected' : ''}>
-                                            ${role.name}
-                                        </option>`
-                                    ).join('')}
-                                </select>
-                                <div class="form-text">Select roles that can use moderation commands</div>
-                            </div>
+                            ${this.createRoleDropdown({
+                                id: 'moderator-roles',
+                                label: 'Moderator Roles',
+                                selectedRoles: config.roles?.moderatorRoleIds || [],
+                                includeNoRole: false,
+                                checkboxClass: 'moderator-role-checkbox',
+                                textId: 'moderator-roles-text',
+                                hiddenSelectId: 'moderator-role-ids',
+                                helpText: 'Select roles that can use moderation commands'
+                            })}
                         </div>
                     </div>
                     <div class="row mt-4">
@@ -1358,13 +1209,12 @@ class BotDashboard {
                             <h6>Auto-Moderation</h6>
                             <div class="form-text mb-3">Automatic detection and action on rule violations</div>
                             
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="automod-enabled" 
-                                       ${config.autoModeration?.enabled === true ? 'checked' : ''}>
-                                <label class="form-check-label" for="automod-enabled">
-                                    <strong>Enable Auto-Moderation</strong>
-                                </label>
-                            </div>
+                            ${this.createToggleSwitch({
+                                id: 'automod-enabled',
+                                label: '<strong>Enable Auto-Moderation</strong>',
+                                checked: config.autoModeration?.enabled === true,
+                                className: 'mb-3'
+                            })}
                             
                             <div id="automod-settings" style="display: ${config.autoModeration?.enabled === true ? 'block' : 'none'};">
                                 <div class="row">
@@ -1374,21 +1224,28 @@ class BotDashboard {
                                                 <h6 class="mb-0">Spam Detection</h6>
                                             </div>
                                             <div class="card-body">
-                                                <div class="form-check form-switch mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="spam-enabled" 
-                                                           ${config.autoModeration?.spam?.enabled !== false ? 'checked' : ''}>
-                                                    <label class="form-check-label" for="spam-enabled">Enable</label>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label for="spam-max-messages" class="form-label">Max Messages</label>
-                                                    <input type="number" class="form-control" id="spam-max-messages" 
-                                                           value="${config.autoModeration?.spam?.maxMessages || 5}" min="2" max="20">
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label for="spam-time-window" class="form-label">Time Window (seconds)</label>
-                                                    <input type="number" class="form-control" id="spam-time-window" 
-                                                           value="${config.autoModeration?.spam?.timeWindow || 10}" min="5" max="60">
-                                                </div>
+                                                ${this.createToggleSwitch({
+                                                    id: 'spam-enabled',
+                                                    label: 'Enable',
+                                                    checked: config.autoModeration?.spam?.enabled !== false,
+                                                    className: 'mb-2'
+                                                })}
+                                                ${this.createFormInput({
+                                                    id: 'spam-max-messages',
+                                                    label: 'Max Messages',
+                                                    type: 'number',
+                                                    value: config.autoModeration?.spam?.maxMessages || 5,
+                                                    min: 2,
+                                                    max: 20
+                                                })}
+                                                ${this.createFormInput({
+                                                    id: 'spam-time-window',
+                                                    label: 'Time Window (seconds)',
+                                                    type: 'number',
+                                                    value: config.autoModeration?.spam?.timeWindow || 10,
+                                                    min: 5,
+                                                    max: 60
+                                                })}
                                                 <div class="mb-2">
                                                     <label for="spam-action" class="form-label">Action</label>
                                                     <select class="form-select" id="spam-action">
@@ -1397,11 +1254,14 @@ class BotDashboard {
                                                         <option value="kick" ${config.autoModeration?.spam?.action === 'kick' ? 'selected' : ''}>Kick</option>
                                                     </select>
                                                 </div>
-                                                <div class="mb-2">
-                                                    <label for="spam-duration" class="form-label">Timeout Duration (seconds)</label>
-                                                    <input type="number" class="form-control" id="spam-duration" 
-                                                           value="${config.autoModeration?.spam?.duration || 300}" min="60" max="2419200">
-                                                </div>
+                                                ${this.createFormInput({
+                                                    id: 'spam-duration',
+                                                    label: 'Timeout Duration (seconds)',
+                                                    type: 'number',
+                                                    value: config.autoModeration?.spam?.duration || 300,
+                                                    min: 60,
+                                                    max: 2419200
+                                                })}
                                                 <div class="mb-2">
                                                     <label for="spam-exempt-roles" class="form-label">Exempt Roles</label>
                                                     <div class="dropdown">
@@ -1436,21 +1296,28 @@ class BotDashboard {
                                                 <h6 class="mb-0">Caps Detection</h6>
                                             </div>
                                             <div class="card-body">
-                                                <div class="form-check form-switch mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="caps-enabled" 
-                                                           ${config.autoModeration?.caps?.enabled !== false ? 'checked' : ''}>
-                                                    <label class="form-check-label" for="caps-enabled">Enable</label>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label for="caps-threshold" class="form-label">Caps Threshold (%)</label>
-                                                    <input type="number" class="form-control" id="caps-threshold" 
-                                                           value="${config.autoModeration?.caps?.threshold || 70}" min="50" max="100">
-                                                </div>
-                                                <div class="mb-2">
-                                                    <label for="caps-min-length" class="form-label">Min Message Length</label>
-                                                    <input type="number" class="form-control" id="caps-min-length" 
-                                                           value="${config.autoModeration?.caps?.minLength || 10}" min="5" max="50">
-                                                </div>
+                                                ${this.createToggleSwitch({
+                                                    id: 'caps-enabled',
+                                                    label: 'Enable',
+                                                    checked: config.autoModeration?.caps?.enabled !== false,
+                                                    className: 'mb-2'
+                                                })}
+                                                ${this.createFormInput({
+                                                    id: 'caps-threshold',
+                                                    label: 'Caps Threshold (%)',
+                                                    type: 'number',
+                                                    value: config.autoModeration?.caps?.threshold || 70,
+                                                    min: 50,
+                                                    max: 100
+                                                })}
+                                                ${this.createFormInput({
+                                                    id: 'caps-min-length',
+                                                    label: 'Min Message Length',
+                                                    type: 'number',
+                                                    value: config.autoModeration?.caps?.minLength || 10,
+                                                    min: 5,
+                                                    max: 50
+                                                })}
                                                 <div class="mb-2">
                                                     <label for="caps-action" class="form-label">Action</label>
                                                     <select class="form-select" id="caps-action">
@@ -2171,12 +2038,13 @@ class BotDashboard {
                     
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="schedule-${index}-name" class="form-label">Schedule Name</label>
-                                <input type="text" class="form-control" id="schedule-${index}-name" 
-                                       value="${schedule.name || ''}" 
-                                       placeholder="Daily cleanup, Weekly purge, etc.">
-                            </div>
+                            ${this.createFormInput({
+                                id: `schedule-${index}-name`,
+                                label: 'Schedule Name',
+                                type: 'text',
+                                value: schedule.name || '',
+                                placeholder: 'Daily cleanup, Weekly purge, etc.'
+                            })}
                             <div class="mb-3">
                                 <label class="form-label">Channels</label>
                                 <div class="dropdown">
@@ -2205,14 +2073,16 @@ class BotDashboard {
                                 </div>
                                 <div class="form-text">Select one or more channels where messages will be purged</div>
                             </div>
-                            <div class="mb-3">
-                                <label for="schedule-${index}-count" class="form-label">Message Count</label>
-                                <input type="number" class="form-control" id="schedule-${index}-count" 
-                                       value="${schedule.messageCount || 0}" 
-                                       min="0" max="1000"
-                                       placeholder="0 for all messages">
-                                <div class="form-text">0 = all messages, or specify a number (1-1000)</div>
-                            </div>
+                            ${this.createFormInput({
+                                id: `schedule-${index}-count`,
+                                label: 'Message Count',
+                                type: 'number',
+                                value: schedule.messageCount || 0,
+                                min: 0,
+                                max: 1000,
+                                placeholder: '0 for all messages',
+                                helpText: '0 = all messages, or specify a number (1-1000)'
+                            })}
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -2228,9 +2098,12 @@ class BotDashboard {
                                         </select>
                                     </div>
                                     <div class="col-6">
-                                        <label for="schedule-${index}-time" class="form-label">Time</label>
-                                        <input type="time" class="form-control" id="schedule-${index}-time" 
-                                               value="${schedule.time || '00:00'}">
+                                        ${this.createFormInput({
+                                            id: `schedule-${index}-time`,
+                                            label: 'Time',
+                                            type: 'time',
+                                            value: schedule.time || '00:00'
+                                        }).replace('<div class="mb-3">', '').replace('</div>', '')}
                                     </div>
                                 </div>
                                 
@@ -2253,19 +2126,25 @@ class BotDashboard {
                                 </div>
                                 
                                 <div id="schedule-${index}-monthly-options" class="mt-2" style="display: ${schedule.frequency === 'monthly' ? 'block' : 'none'}">
-                                    <label for="schedule-${index}-day-of-month" class="form-label">Day of Month</label>
-                                    <input type="number" class="form-control" id="schedule-${index}-day-of-month" 
-                                           value="${schedule.dayOfMonth || 1}" min="1" max="31">
+                                    ${this.createFormInput({
+                                        id: `schedule-${index}-day-of-month`,
+                                        label: 'Day of Month',
+                                        type: 'number',
+                                        value: schedule.dayOfMonth || 1,
+                                        min: 1,
+                                        max: 31
+                                    }).replace('<div class="mb-3">', '').replace('</div>', '')}
                                 </div>
                                 
                                 <div id="schedule-${index}-custom-options" class="mt-2" style="display: ${schedule.frequency === 'custom' ? 'block' : 'none'}">
-                                    <label for="schedule-${index}-cron" class="form-label">Cron Expression</label>
-                                    <input type="text" class="form-control" id="schedule-${index}-cron" 
-                                           value="${schedule.cron || '0 0 * * *'}" 
-                                           placeholder="0 0 * * * (daily at midnight)">
-                                    <div class="form-text">
-                                        <a href="https://crontab.guru/" target="_blank">Cron expression generator</a>
-                                    </div>
+                                    ${this.createFormInput({
+                                        id: `schedule-${index}-cron`,
+                                        label: 'Cron Expression',
+                                        type: 'text',
+                                        value: schedule.cron || '0 0 * * *',
+                                        placeholder: '0 0 * * * (daily at midnight)',
+                                        helpText: '<a href="https://crontab.guru/" target="_blank">Cron expression generator</a>'
+                                    }).replace('<div class="mb-3">', '').replace('</div>', '')}
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -2564,6 +2443,294 @@ class BotDashboard {
                 }
             });
         });
+    }
+
+    // Reusable component functions
+    createRoleDropdown(options) {
+        const {
+            id,
+            label,
+            selectedRoles = [],
+            includeNoRole = false,
+            checkboxClass,
+            textId,
+            hiddenSelectId,
+            helpText = '',
+            required = false
+        } = options;
+
+        const noRoleOption = includeNoRole ? `
+            <div class="form-check">
+                <input class="form-check-input ${checkboxClass}" type="checkbox" 
+                       value="@norole" id="${id}-norole"
+                       ${selectedRoles.includes('@norole') ? 'checked' : ''}>
+                <label class="form-check-label d-flex align-items-center" for="${id}-norole">
+                    <span class="role-color-dot me-2" style="background-color: #808080; 
+                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                    <em>No Role (Users with no roles)</em>
+                </label>
+            </div>
+            <hr class="my-2">
+        ` : '';
+
+        return `
+            <div class="mb-3">
+                <label for="${hiddenSelectId}" class="form-label">${label}</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                            id="${id}-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
+                        <span id="${textId}">Select roles...</span>
+                    </button>
+                    <div class="dropdown-menu w-100 p-2" aria-labelledby="${id}-dropdown" 
+                         style="max-height: 300px; overflow-y: auto;">
+                        ${noRoleOption}
+                        ${this.availableRoles.map(role => 
+                            `<div class="form-check">
+                                <input class="form-check-input ${checkboxClass}" type="checkbox" 
+                                       value="${role.id}" id="${id}-${role.id}"
+                                       ${selectedRoles.includes(role.id) ? 'checked' : ''}>
+                                <label class="form-check-label d-flex align-items-center" for="${id}-${role.id}">
+                                    <span class="role-color-dot me-2" style="background-color: ${role.color}; 
+                                          width: 12px; height: 12px; border-radius: 50%; display: inline-block;"></span>
+                                    ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                                </label>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+                <select class="form-select d-none" id="${hiddenSelectId}" multiple ${required ? 'required' : ''}>
+                    ${includeNoRole ? `<option value="@norole" ${selectedRoles.includes('@norole') ? 'selected' : ''}>No Role</option>` : ''}
+                    ${this.availableRoles.map(role => 
+                        `<option value="${role.id}" ${selectedRoles.includes(role.id) ? 'selected' : ''}>
+                            ${role.name}
+                        </option>`
+                    ).join('')}
+                </select>
+                ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
+            </div>
+        `;
+    }
+
+    createChannelDropdown(options) {
+        const {
+            id,
+            label,
+            selectedChannels = [],
+            checkboxClass,
+            textId,
+            hiddenSelectId,
+            helpText = ''
+        } = options;
+
+        return `
+            <div class="mb-3">
+                <label for="${hiddenSelectId}" class="form-label">${label}</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" 
+                            id="${id}-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
+                        <span id="${textId}">Select channels...</span>
+                    </button>
+                    <div class="dropdown-menu w-100 p-2" aria-labelledby="${id}-dropdown" 
+                         style="max-height: 300px; overflow-y: auto;">
+                        ${this.availableChannels.map(channel => 
+                            `<div class="form-check">
+                                <input class="form-check-input ${checkboxClass}" type="checkbox" 
+                                       value="${channel.id}" id="${id}-${channel.id}"
+                                       ${selectedChannels.includes(channel.id) ? 'checked' : ''}>
+                                <label class="form-check-label" for="${id}-${channel.id}">
+                                    ${channel.category ? `${channel.category} / ` : ''}#${channel.name}
+                                </label>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+                <select class="form-select d-none" id="${hiddenSelectId}" multiple>
+                    ${this.availableChannels.map(channel => 
+                        `<option value="${channel.id}" ${selectedChannels.includes(channel.id) ? 'selected' : ''}>
+                            ${channel.name}
+                        </option>`
+                    ).join('')}
+                </select>
+                ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
+            </div>
+        `;
+    }
+
+    createFormInput(options) {
+        const {
+            id,
+            label,
+            type = 'text',
+            value = '',
+            required = false,
+            helpText = '',
+            placeholder = '',
+            min = null,
+            max = null,
+            step = null
+        } = options;
+
+        const attributes = [];
+        if (required) attributes.push('required');
+        if (placeholder) attributes.push(`placeholder="${placeholder}"`);
+        if (min !== null) attributes.push(`min="${min}"`);
+        if (max !== null) attributes.push(`max="${max}"`);
+        if (step !== null) attributes.push(`step="${step}"`);
+
+        return `
+            <div class="mb-3">
+                <label for="${id}" class="form-label">${label}${required ? ' *' : ''}</label>
+                <input type="${type}" class="form-control" id="${id}" 
+                       value="${value}" ${attributes.join(' ')}>
+                ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
+            </div>
+        `;
+    }
+
+    createCheckboxInput(options) {
+        const {
+            id,
+            label,
+            description = '',
+            checked = false,
+            className = 'mb-2'
+        } = options;
+
+        return `
+            <div class="form-check ${className}">
+                <input class="form-check-input" type="checkbox" id="${id}" 
+                       ${checked ? 'checked' : ''}>
+                <label class="form-check-label" for="${id}">
+                    <strong>${label}</strong>${description ? ` - ${description}` : ''}
+                </label>
+            </div>
+        `;
+    }
+
+    createChannelSelect(options) {
+        const {
+            id,
+            label,
+            selectedChannelId = '',
+            required = false,
+            helpText = ''
+        } = options;
+
+        return `
+            <div class="mb-3">
+                <label for="${id}" class="form-label">${label}${required ? ' *' : ''}</label>
+                <select class="form-select" id="${id}" ${required ? 'required' : ''}>
+                    <option value="">Select a channel...</option>
+                    ${this.availableChannels.map(channel => 
+                        `<option value="${channel.id}" ${selectedChannelId === channel.id ? 'selected' : ''}>
+                            ${channel.category} / #${channel.name}
+                        </option>`
+                    ).join('')}
+                </select>
+                ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
+            </div>
+        `;
+    }
+
+    createToggleSwitch(options) {
+        const {
+            id,
+            label = 'Enabled',
+            checked = false,
+            className = ''
+        } = options;
+
+        return `
+            <div class="form-check form-switch ${className}">
+                <input class="form-check-input" type="checkbox" id="${id}" 
+                       ${checked ? 'checked' : ''}>
+                <label class="form-check-label" for="${id}">${label}</label>
+            </div>
+        `;
+    }
+
+    createPluginCardHeader(options) {
+        const {
+            pluginName,
+            icon,
+            command = '',
+            enabled = true,
+            pluginId
+        } = options;
+
+        return `
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <h6 class="mb-0 me-3"><i class="fas fa-${icon}"></i> ${pluginName} Plugin</h6>
+                    <button class="btn btn-sm btn-outline-secondary collapse-toggle collapsed" type="button" 
+                            data-bs-toggle="collapse" data-bs-target="#${pluginId}-config" aria-expanded="false" 
+                            aria-controls="${pluginId}-config" title="Toggle configuration section">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info ms-2 reload-plugin-btn" type="button" 
+                            data-plugin="${pluginId}" title="Reload plugin">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    ${command ? `
+                        <div class="ms-auto me-3">
+                            <span class="badge bg-secondary">${command}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                ${this.createToggleSwitch({
+                    id: `${pluginId}-enabled`,
+                    label: 'Enabled',
+                    checked: enabled
+                })}
+            </div>
+        `;
+    }
+
+    createRoleSelect(options) {
+        const {
+            id,
+            label,
+            selectedRoleId = '',
+            required = false,
+            helpText = ''
+        } = options;
+
+        return `
+            <div class="mb-3">
+                <label for="${id}" class="form-label">${label}${required ? ' *' : ''}</label>
+                <select class="form-select" id="${id}" ${required ? 'required' : ''}>
+                    <option value="">Select a role...</option>
+                    ${this.availableRoles.map(role => 
+                        `<option value="${role.id}" ${selectedRoleId === role.id ? 'selected' : ''} 
+                                style="color: ${role.color}">
+                            ${role.name}${role.managed ? ' (Bot Role)' : ''}
+                        </option>`
+                    ).join('')}
+                </select>
+                ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
+            </div>
+        `;
+    }
+
+    createTextArea(options) {
+        const {
+            id,
+            label,
+            value = '',
+            rows = 2,
+            required = false,
+            helpText = '',
+            placeholder = ''
+        } = options;
+
+        return `
+            <div class="mb-3">
+                <label for="${id}" class="form-label">${label}${required ? ' *' : ''}</label>
+                <textarea class="form-control" id="${id}" rows="${rows}" 
+                          ${required ? 'required' : ''} ${placeholder ? `placeholder="${placeholder}"` : ''}>${value}</textarea>
+                ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
+            </div>
+        `;
     }
 }
 
